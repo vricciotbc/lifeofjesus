@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Life of Jesus — HRE2O</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+
+/* ============================================================
+   SECTION 1: CSS VARIABLES & GLOBAL RESET
+   ============================================================ */
+:root {
+  --gold:        #e8c96a;
+  --gold-dark:   #b8952a;
+  --gold-glow:   #f0d980;
+  --parchment:   #f5ead4;
+  --parchment2:  #ede0c0;
+  --ink:         #1e1408;
+  --ink-soft:    #3a2c10;
+  --red-acc:     #8b1a1a;
+  --blue-acc:    #2a4a6b;
+  --correct:     #2d6a2d;
+  --wrong:       #7a1a1a;
+  --ui-bg:       rgba(15, 8, 2, 0.88);
+  --dialogue-bg: rgba(10, 5, 1, 0.97);
+  --font-head:   'Cinzel', serif;
+  --font-body:   'Crimson Text', serif;
+  --scene-h:     500px;
+  --panel-h:     240px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0a0604;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+  font-family: var(--font-body);
+}
+
+/* ============================================================
+   SECTION 2: GAME CONTAINER — SPLIT LAYOUT
+   Two-section layout:  TOP = scene (background+sprites)
+                        BOTTOM = dialogue / questions
+   ============================================================ */
+#game-scale-wrapper {
+  width: 100vw;
+  height: 100vh;
+  background: #080402;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#game-container {
+  position: relative;
+  width: 1280px;
+  height: 720px;
+  display: flex;
+  flex-direction: column;   /* ← stacks scene on top, panel below */
+  overflow: hidden;
+  transform-origin: center center;
+  background: #1a0e05;
+  border: 2px solid var(--gold-dark);
+  box-shadow: 0 0 80px rgba(232,201,106,0.25), 0 0 200px rgba(0,0,0,0.8);
+}
+
+/* ── TOP SECTION: Game Scene ── */
+#scene-area {
+  position: relative;
+  flex: 1 1 auto;           /* fills remaining height after panel */
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* ── BOTTOM SECTION: Dialogue & Questions ── */
+#bottom-panel {
+  position: relative;
+  flex: 0 0 var(--panel-h);
+  background: var(--dialogue-bg);
+  overflow: hidden;
+  z-index: 2;
+}
+
+/* Gold accent line at top of panel */
+#bottom-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold-dark) 20%,
+              var(--gold) 50%, var(--gold-dark) 80%, transparent 100%);
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* ============================================================
+   SECTION 3: BACKGROUND LAYER (inside scene-area)
+   CSS gradient fallbacks are defined here per stage.
+   JavaScript overrides with background-image when a PNG exists.
+   ============================================================ */
+#background-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #1a0e05;
+  transition: background 0.3s ease;
+}
+
+/* ── Gradient fallbacks (used when Stage{N}.png is absent) ── */
+
+#background-layer.bg-annunciation {
+  background:
+    radial-gradient(ellipse 400px 600px at 72% 25%, rgba(255,230,120,0.55) 0%, rgba(255,200,80,0.25) 40%, transparent 70%),
+    radial-gradient(ellipse 250px 700px at 70% 0%, rgba(255,240,180,0.3) 0%, transparent 60%),
+    linear-gradient(175deg, #1a0838 0%, #2d1060 25%, #4a1a05 60%, #2d1005 100%);
+}
+#background-layer.bg-birth {
+  background:
+    radial-gradient(ellipse 350px 350px at 50% 55%, rgba(255,200,80,0.5) 0%, rgba(220,140,40,0.3) 40%, transparent 70%),
+    radial-gradient(ellipse 180px 180px at 82% 12%, rgba(255,255,200,0.5) 0%, transparent 50%),
+    linear-gradient(180deg, #04040f 0%, #08081a 20%, #180c04 55%, #2d1a08 100%);
+}
+#background-layer.bg-temple {
+  background:
+    radial-gradient(ellipse 700px 300px at 50% 0%, rgba(255,220,120,0.4) 0%, transparent 60%),
+    repeating-linear-gradient(90deg, rgba(220,190,120,0.12) 0px, rgba(220,190,120,0.12) 2px, transparent 2px, transparent 110px),
+    linear-gradient(180deg, #1a1408 0%, #2a2010 30%, #3d3018 65%, #4a3a20 100%);
+}
+#background-layer.bg-egypt {
+  background:
+    radial-gradient(ellipse 400px 350px at 85% 20%, rgba(255,160,40,0.7) 0%, rgba(255,100,20,0.3) 50%, transparent 70%),
+    radial-gradient(ellipse 600px 250px at 50% 100%, rgba(220,160,60,0.6) 0%, transparent 60%),
+    linear-gradient(180deg, #0f0a05 0%, #4a2008 20%, #8b5010 45%, #b87820 65%, #c88a30 80%, #b06820 100%);
+}
+#background-layer.bg-egypt::before {
+  content:''; position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 350px 180px at 20% 92%, rgba(200,150,60,0.7) 0%, transparent 55%),
+    radial-gradient(ellipse 450px 200px at 65% 95%, rgba(200,150,60,0.65) 0%, transparent 55%);
+}
+#background-layer.bg-templefinding {
+  /* Stage 5 reuses the temple background image — set dynamically */
+  background:
+    radial-gradient(ellipse 500px 300px at 50% 0%, rgba(255,210,100,0.5) 0%, transparent 65%),
+    repeating-linear-gradient(90deg, rgba(220,190,100,0.14) 0px, rgba(220,190,100,0.14) 2px, transparent 2px, transparent 110px),
+    linear-gradient(180deg, #221a08 0%, #3a2e10 30%, #4a3a18 65%, #5a4820 100%);
+}
+#background-layer.bg-baptism {
+  background:
+    radial-gradient(ellipse 500px 300px at 50% 15%, rgba(120,200,255,0.45) 0%, rgba(60,140,220,0.2) 50%, transparent 75%),
+    linear-gradient(180deg, #0a2040 0%, #103060 20%, #155a20 50%, #1e6a18 70%, #154a12 100%);
+}
+#background-layer.bg-baptism::before {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:180px;
+  background: linear-gradient(to top, rgba(15,50,130,0.95) 0%, rgba(40,110,200,0.5) 65%, transparent 100%);
+}
+#background-layer.bg-temptation {
+  background:
+    radial-gradient(ellipse 450px 280px at 75% 20%, rgba(255,100,20,0.5) 0%, rgba(200,60,10,0.2) 50%, transparent 70%),
+    linear-gradient(180deg, #1a0808 0%, #3a1205 20%, #6a2008 45%, #7a2a08 65%, #5a1805 100%);
+}
+#background-layer.bg-temptation::before {
+  content:''; position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 280px 500px at 8% 75%, rgba(120,55,10,0.75) 0%, transparent 48%),
+    radial-gradient(ellipse 350px 480px at 80% 80%, rgba(120,55,10,0.75) 0%, transparent 48%);
+}
+#background-layer.bg-apostles {
+  background:
+    radial-gradient(ellipse 500px 250px at 50% 12%, rgba(140,210,255,0.5) 0%, rgba(80,160,230,0.2) 50%, transparent 70%),
+    linear-gradient(180deg, #0a1830 0%, #103060 20%, #155a18 45%, #1e7020 65%, #145015 100%);
+}
+#background-layer.bg-apostles::before {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:180px;
+  background: linear-gradient(to top, rgba(10,45,130,0.95) 0%, rgba(35,100,210,0.45) 70%, transparent 100%);
+}
+#background-layer.bg-teaching {
+  background:
+    radial-gradient(ellipse 500px 300px at 75% 15%, rgba(255,220,120,0.45) 0%, rgba(255,180,60,0.2) 45%, transparent 70%),
+    radial-gradient(ellipse 700px 400px at 30% 50%, rgba(60,160,50,0.35) 0%, transparent 65%),
+    linear-gradient(180deg, #0e2008 0%, #1a3810 20%, #2a5518 45%, #357020 65%, #206018 100%);
+}
+#background-layer.bg-healing {
+  background:
+    radial-gradient(ellipse 450px 280px at 65% 15%, rgba(255,210,120,0.55) 0%, rgba(230,180,80,0.25) 45%, transparent 65%),
+    repeating-linear-gradient(90deg, rgba(230,200,130,0.16) 0px, rgba(230,200,130,0.16) 2px, transparent 2px, transparent 100px),
+    linear-gradient(180deg, #2a2008 0%, #3d3015 25%, #4a3a18 60%, #5a4820 85%, #4a3a18 100%);
+}
+#background-layer.bg-healing::before {
+  content:''; position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 65px 460px at 10% 56%, rgba(220,185,105,0.55) 0%, transparent 48%),
+    radial-gradient(ellipse 65px 460px at 28% 56%, rgba(220,185,105,0.55) 0%, transparent 48%),
+    radial-gradient(ellipse 65px 460px at 55% 56%, rgba(220,185,105,0.55) 0%, transparent 48%),
+    radial-gradient(ellipse 65px 460px at 75% 56%, rgba(220,185,105,0.55) 0%, transparent 48%),
+    radial-gradient(ellipse 65px 460px at 92% 56%, rgba(220,185,105,0.55) 0%, transparent 48%);
+}
+
+/* ============================================================
+   SECTION 4: SPRITE LAYER (inside scene-area)
+   Sprites sit at bottom of scene area — never clipped by panel.
+   ============================================================ */
+#sprite-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.sprite {
+  position: absolute;
+  bottom: 8px;           /* sits just above scene floor */
+  width: auto;
+  height: 270px;         /* tall enough to show full characters */
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transition: transform 0.9s cubic-bezier(0.25,0.46,0.45,0.94),
+              opacity 0.5s ease,
+              filter 0.3s ease;
+  transform-origin: bottom center;
+  will-change: transform, opacity;
+  opacity: 0;
+}
+
+.sprite.visible  { opacity: 1; }
+.sprite.talking  { filter: brightness(1.15) drop-shadow(0 0 12px rgba(232,201,106,0.6)); }
+.sprite.idle-anim { animation: idleBreath 3s ease-in-out infinite; }
+
+.sprite-prop {
+  position: absolute;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transition: opacity 0.6s ease;
+  will-change: opacity;
+}
+
+@keyframes idleBreath {
+  0%, 100% { transform: scaleY(1) translateY(0); }
+  50%       { transform: scaleY(0.985) translateY(2px); }
+}
+
+@keyframes doveDescend {
+  0%   { transform: translateY(-80px) scale(0.6); opacity: 0; }
+  60%  { opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.dove-animate { animation: doveDescend 1.4s ease-out forwards; }
+
+#sprite-manger {
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 170px;
+  width: auto;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+#sprite-manger.visible { opacity: 1; }
+
+#sprite-dove {
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 140px;
+  width: auto;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+/* ============================================================
+   SECTION 5: PANEL INFO BAR — lives at top of bottom-panel.
+   Contains: role | progress | score | restart | mute
+   ============================================================ */
+#panel-info-bar {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 14px 5px;
+  background: rgba(6, 3, 0, 0.6);
+  border-bottom: 1px solid rgba(232,201,106,0.15);
+  flex-shrink: 0;
+}
+
+/* Role badge — left-most */
+#role-badge {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  white-space: nowrap;
+}
+#role-label {
+  font-family: var(--font-head);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: rgba(232,201,106,0.45);
+  text-transform: uppercase;
+}
+#role-name {
+  font-family: var(--font-head);
+  font-size: 12px;
+  color: var(--gold);
+  text-shadow: 0 0 8px rgba(232,201,106,0.7);
+  letter-spacing: 0.06em;
+}
+
+/* Progress bar — stretches to fill available space */
+#progress-bar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+#progress-track {
+  width: 100%; height: 6px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(232,201,106,0.25);
+  border-radius: 3px;
+  overflow: hidden;
+}
+#progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-glow));
+  border-radius: 3px;
+  transition: width 0.6s ease;
+  box-shadow: 0 0 8px rgba(232,201,106,0.5);
+  width: 0%;
+}
+#stage-counter {
+  font-family: var(--font-head);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: rgba(232,201,106,0.5);
+}
+
+/* Score */
+#panel-score-section {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  white-space: nowrap;
+}
+#panel-score-label {
+  font-family: var(--font-head);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: rgba(232,201,106,0.45);
+  text-transform: uppercase;
+}
+#panel-score-value {
+  font-family: var(--font-head);
+  font-size: 15px;
+  color: var(--gold);
+  text-shadow: 0 0 8px rgba(232,201,106,0.7);
+  transition: transform 0.15s ease;
+  min-width: 28px;
+  text-align: right;
+}
+#panel-score-value.bump { transform: scale(1.3); }
+
+/* Restart button */
+#btn-hud-restart {
+  font-family: var(--font-head);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(232,201,106,0.5);
+  background: transparent;
+  border: 1px solid rgba(232,201,106,0.18);
+  padding: 3px 8px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+#btn-hud-restart:hover {
+  color: var(--gold);
+  border-color: rgba(232,201,106,0.5);
+  background: rgba(232,201,106,0.05);
+}
+
+/* Mute button — inline in info bar, not absolute */
+#audio-btn {
+  width: 26px; height: 26px;
+  background: rgba(12, 6, 1, 0.6);
+  border: 1px solid rgba(232,201,106,0.25);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--gold);
+  padding: 0;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+#audio-btn:hover {
+  background: rgba(232,201,106,0.12);
+  border-color: rgba(232,201,106,0.6);
+}
+#audio-btn.muted {
+  color: rgba(232,201,106,0.35);
+  border-color: rgba(232,201,106,0.12);
+}
+
+/* ============================================================
+   SECTION 6: STAGE TITLE BANNER (inside scene-area)
+   ============================================================ */
+#stage-title-banner {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 110px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+#stage-title-banner.visible { opacity: 1; }
+#stage-number-label {
+  font-family: var(--font-head);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+#stage-title-text {
+  font-family: var(--font-head);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--gold);
+  text-shadow: 0 0 30px rgba(232,201,106,0.7), 0 2px 4px rgba(0,0,0,0.9);
+  letter-spacing: 0.05em;
+}
+#stage-title-divider {
+  width: 180px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
+  margin-top: 7px;
+}
+
+/* Corner decorations (scene-area only) */
+.corner-decor {
+  position: absolute;
+  width: 36px; height: 36px;
+  z-index: 22;
+  pointer-events: none;
+  opacity: 0.4;
+}
+.corner-decor.tl { top: 8px; left:  8px; border-top: 1px solid var(--gold-dark); border-left:  1px solid var(--gold-dark); }
+.corner-decor.tr { top: 8px; right: 8px; border-top: 1px solid var(--gold-dark); border-right: 1px solid var(--gold-dark); }
+
+/* ============================================================
+   SECTION 7: DIALOGUE BOX (inside bottom-panel, below info bar)
+   ============================================================ */
+#dialogue-box {
+  position: absolute;
+  /* sits below the info bar — info bar is ~36px */
+  top: 36px; bottom: 0; left: 0; right: 0;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+#dialogue-box.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Portrait column */
+#dialogue-portrait-wrap {
+  width: 130px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 6px 8px;
+  position: relative;
+}
+#dialogue-portrait {
+  width: 100px;
+  height: 120px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 0 10px rgba(232,201,106,0.3));
+  transform-origin: bottom center;
+  transition: filter 0.3s ease;
+}
+#dialogue-speaker-name {
+  position: absolute;
+  bottom: 10px;
+  left: 0; right: 0;
+  text-align: center;
+  font-family: var(--font-head);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  text-shadow: 0 0 8px rgba(232,201,106,0.8);
+  text-transform: uppercase;
+}
+
+/* Vertical divider */
+#dialogue-divider {
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(232,201,106,0.3) 20%, rgba(232,201,106,0.3) 80%, transparent);
+  flex-shrink: 0;
+  margin: 10px 0;
+}
+
+/* Text area */
+#dialogue-text-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 22px 10px;
+}
+#dialogue-text {
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--parchment);
+  flex: 1;
+}
+#dialogue-text em { color: var(--gold); font-style: italic; }
+
+/* Controls row: hint + button */
+#dialogue-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 8px;
+  gap: 12px;
+}
+#dialogue-hint {
+  font-family: var(--font-head);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(232,201,106,0.4);
+  text-transform: uppercase;
+  animation: pulse 2s ease-in-out infinite;
+  flex: 1;
+  text-align: center;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.9; }
+}
+
+#btn-continue {
+  font-family: var(--font-head);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  border: none;
+  padding: 7px 20px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  display: none;
+}
+#btn-continue:hover {
+  background: linear-gradient(135deg, var(--gold), var(--gold-glow));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(232,201,106,0.4);
+}
+#btn-continue.visible { display: block; }
+
+/* ============================================================
+   SECTION 8: QUESTION PANEL (inside bottom-panel, below info bar)
+   ============================================================ */
+#question-overlay {
+  position: absolute;
+  top: 36px; bottom: 0; left: 0; right: 0;
+  z-index: 10;
+  background: rgba(8, 4, 1, 0.97);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+#question-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+#question-panel {
+  width: 100%;
+  height: 100%;
+  padding: 10px 24px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  overflow-y: auto;
+}
+/* Gold top rule on question panel */
+#question-panel::before {
+  content:'';
+  position: absolute;
+  top: 0; left: 8%; right: 8%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+/* Question header row */
+#question-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+#question-label {
+  font-family: var(--font-head);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+}
+/* Points indicator showing how many pts player can still earn */
+#question-pts-hint {
+  font-family: var(--font-head);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: rgba(232,201,106,0.55);
+}
+
+#question-text {
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--parchment);
+  margin-bottom: 8px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+#answer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.answer-btn {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--parchment2);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(232,201,106,0.18);
+  border-radius: 3px;
+  padding: 7px 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.answer-btn:hover:not(:disabled) {
+  background: rgba(232,201,106,0.08);
+  border-color: rgba(232,201,106,0.5);
+  color: var(--gold-glow);
+  transform: translateX(3px);
+}
+.answer-btn.correct {
+  background: rgba(45,106,45,0.25);
+  border-color: #4a9a4a;
+  color: #8fdc8f;
+}
+.answer-btn.wrong {
+  background: rgba(122,26,26,0.25);
+  border-color: #9a3a3a;
+  color: #dc8f8f;
+  animation: wrongShake 0.4s ease;
+}
+.answer-btn:disabled { cursor: not-allowed; }
+.answer-btn .letter {
+  display: inline-block;
+  width: 20px; height: 20px;
+  border: 1px solid rgba(232,201,106,0.3);
+  border-radius: 50%;
+  text-align: center;
+  line-height: 18px;
+  font-family: var(--font-head);
+  font-size: 10px;
+  color: var(--gold-dark);
+  margin-right: 9px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+@keyframes wrongShake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-5px); }
+  40%       { transform: translateX(5px); }
+  60%       { transform: translateX(-3px); }
+  80%       { transform: translateX(3px); }
+}
+
+#feedback-area {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 38px;
+  flex-shrink: 0;
+  padding-bottom: 4px;
+}
+#feedback-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.4;
+  flex: 1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#feedback-text.visible  { opacity: 1; }
+#feedback-text.correct-fb { color: #9fe09f; }
+#feedback-text.wrong-fb   { color: #e09f9f; }
+
+#btn-next-stage {
+  font-family: var(--font-head);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  border: none;
+  padding: 9px 24px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  display: none;
+  white-space: nowrap;
+}
+#btn-next-stage:hover {
+  background: linear-gradient(135deg, var(--gold), var(--gold-glow));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(232,201,106,0.4);
+}
+#btn-next-stage.visible { display: block; }
+
+/* ============================================================
+   SECTION 9: (audio-btn styles merged into SECTION 5 above)
+   ============================================================ */
+
+/* ============================================================
+   SECTION 10: FULL-SCREEN OVERLAYS
+   These are direct children of #game-container and use
+   position:absolute inset:0 to cover both sections.
+   ============================================================ */
+
+/* Stage transition black fade */
+#transition-fade {
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  background: #050301;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+#transition-fade.fade-in  { opacity: 1; pointer-events: all; }
+#transition-fade.fade-out { opacity: 0; pointer-events: none; }
+
+/* ── TITLE SCREEN ── */
+#title-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 51;
+  background:
+    radial-gradient(ellipse 600px 500px at 50% 40%, rgba(232,180,50,0.15) 0%, transparent 70%),
+    linear-gradient(180deg, #050301 0%, #0d0804 30%, #050301 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+#title-screen.hidden { display: none; }
+
+.title-ornament {
+  font-size: 26px;
+  color: var(--gold-dark);
+  letter-spacing: 0.3em;
+  margin-bottom: 14px;
+  opacity: 0.7;
+}
+#title-course {
+  font-family: var(--font-head);
+  font-size: 11px;
+  letter-spacing: 0.35em;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+#title-main {
+  font-family: var(--font-head);
+  font-size: 56px;
+  font-weight: 900;
+  color: var(--gold);
+  text-shadow: 0 0 60px rgba(232,201,106,0.5), 0 0 120px rgba(232,201,106,0.2), 0 4px 8px rgba(0,0,0,0.9);
+  letter-spacing: 0.04em;
+  text-align: center;
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+#title-sub {
+  font-family: var(--font-body);
+  font-size: 20px;
+  font-style: italic;
+  color: var(--parchment2);
+  margin-bottom: 6px;
+  opacity: 0.8;
+}
+#title-divider {
+  width: 260px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dark), var(--gold), var(--gold-dark), transparent);
+  margin: 20px 0 24px;
+}
+#title-desc {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: rgba(245,234,212,0.6);
+  text-align: center;
+  max-width: 480px;
+  line-height: 1.7;
+  margin-bottom: 36px;
+}
+#btn-start-game {
+  font-family: var(--font-head);
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-glow));
+  border: none;
+  padding: 13px 46px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 0 30px rgba(232,201,106,0.2);
+  overflow: hidden;
+  position: relative;
+}
+#btn-start-game::before {
+  content:'';
+  position: absolute; top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+}
+#btn-start-game:hover::before { transform: translateX(100%); }
+#btn-start-game:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 50px rgba(232,201,106,0.35);
+}
+
+/* ── END SCREEN ── */
+#end-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 51;
+  background:
+    radial-gradient(ellipse 600px 500px at 50% 40%, rgba(232,180,50,0.15) 0%, transparent 70%),
+    linear-gradient(180deg, #050301 0%, #0d0804 100%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+#end-screen.visible { display: flex; }
+#end-title {
+  font-family: var(--font-head);
+  font-size: 40px;
+  font-weight: 900;
+  color: var(--gold);
+  text-shadow: 0 0 40px rgba(232,201,106,0.5);
+  margin-bottom: 8px;
+  letter-spacing: 0.06em;
+}
+#end-subtitle {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-style: italic;
+  color: var(--parchment2);
+  margin-bottom: 28px;
+  opacity: 0.8;
+}
+#end-score-display {
+  font-family: var(--font-head);
+  font-size: 52px;
+  color: var(--gold-glow);
+  text-shadow: 0 0 40px rgba(232,201,106,0.6);
+  margin-bottom: 4px;
+}
+#end-score-label {
+  font-family: var(--font-head);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: rgba(232,201,106,0.5);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+#end-message {
+  font-family: var(--font-body);
+  font-size: 17px;
+  color: rgba(245,234,212,0.7);
+  text-align: center;
+  max-width: 460px;
+  line-height: 1.7;
+  margin-bottom: 32px;
+  font-style: italic;
+}
+#btn-restart {
+  font-family: var(--font-head);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  border: none;
+  padding: 12px 40px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+}
+#btn-restart:hover {
+  background: linear-gradient(135deg, var(--gold), var(--gold-glow));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(232,201,106,0.3);
+}
+
+</style>
+</head>
+<body>
+
+<div id="game-scale-wrapper">
+<div id="game-container">
+
+  <!-- ═══════════════════════════════════════════════
+       TOP SECTION — GAME SCENE
+       Background image + sprites displayed here.
+       No dialogue overlaps this area.
+       ═══════════════════════════════════════════════ -->
+  <div id="scene-area">
+
+    <!-- Background (CSS gradient or PNG image) -->
+    <div id="background-layer"></div>
+
+    <!-- Sprite Layer -->
+    <div id="sprite-layer">
+      <img id="sprite-left"   class="sprite" src="" alt="">
+      <img id="sprite-center" class="sprite" src="" alt="">
+      <img id="sprite-right"  class="sprite" src="" alt="">
+      <img id="sprite-manger" class="sprite-prop" src="BabyJesusManger.png" alt="manger">
+      <img id="sprite-dove"   class="sprite-prop" src="DovespiritSprite.png" alt="dove">
+    </div>
+
+    <!-- Stage title banner (fades in then out) -->
+    <div id="stage-title-banner">
+      <div id="stage-number-label">Stage 1</div>
+      <div id="stage-title-text">The Annunciation</div>
+      <div id="stage-title-divider"></div>
+    </div>
+
+    <!-- Corner decorations (scene only) -->
+    <div class="corner-decor tl"></div>
+    <div class="corner-decor tr"></div>
+
+  </div><!-- /#scene-area -->
+
+
+  <!-- ═══════════════════════════════════════════════
+       BOTTOM SECTION — DIALOGUE & QUESTIONS
+       Info bar at top, dialogue/questions below.
+       ═══════════════════════════════════════════════ -->
+  <div id="bottom-panel">
+
+    <!-- Info bar: role | progress | score | restart | mute -->
+    <div id="panel-info-bar">
+      <div id="role-badge">
+        <span id="role-label">Playing As</span>
+        <span id="role-name">Mary</span>
+      </div>
+      <div id="progress-bar-wrapper">
+        <div id="progress-track"><div id="progress-fill"></div></div>
+        <div id="stage-counter">Stage 1 of 10</div>
+      </div>
+      <div id="panel-score-section">
+        <span id="panel-score-label">Score</span>
+        <span id="panel-score-value">0</span>
+      </div>
+      <button id="btn-hud-restart" onclick="restartGame()">↺ Restart</button>
+      <button id="audio-btn" onclick="toggleMute()" title="Toggle music">♪</button>
+    </div>
+
+    <!-- Dialogue Box -->
+    <div id="dialogue-box">
+      <div id="dialogue-portrait-wrap">
+        <img id="dialogue-portrait" src="" alt="">
+        <div id="dialogue-speaker-name">Narrator</div>
+      </div>
+      <div id="dialogue-divider"></div>
+      <div id="dialogue-text-area">
+        <div id="dialogue-text"></div>
+        <div id="dialogue-controls">
+          <span id="dialogue-hint">Click or press Space to continue</span>
+          <button id="btn-continue" onclick="advanceDialogue()">Continue →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Question Overlay (covers dialogue area when active) -->
+    <div id="question-overlay">
+      <div id="question-panel">
+        <div id="question-header">
+          <div id="question-label">✦ Knowledge Check ✦</div>
+          <div id="question-pts-hint">First correct: 20 pts</div>
+        </div>
+        <div id="question-text"></div>
+        <div id="answer-grid"></div>
+        <div id="feedback-area">
+          <div id="feedback-text"></div>
+          <button id="btn-next-stage" onclick="advanceQuestion()">Next →</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /#bottom-panel -->
+
+
+  <!-- ═══════════════════════════════════════════════
+       FULL-SCREEN OVERLAYS (cover entire game-container)
+       ═══════════════════════════════════════════════ -->
+
+  <!-- Black fade between stages -->
+  <div id="transition-fade"></div>
+
+  <!-- Title Screen -->
+  <div id="title-screen">
+    <div class="title-ornament">✦ ✦ ✦</div>
+    <div id="title-course">HRE2O · Grade 10 Catholic Religion</div>
+    <div id="title-main">The Life<br>of Jesus</div>
+    <div id="title-sub">An Educational Journey Through the Gospels</div>
+    <div id="title-divider"></div>
+    <div id="title-desc">Follow the life of Jesus through 10 key events — from the Annunciation to the Healing Ministry. Read carefully, answer questions correctly, and earn the highest score you can.</div>
+    <button id="btn-start-game" onclick="startGame()">Begin the Journey</button>
+  </div>
+
+  <!-- End Screen -->
+  <div id="end-screen">
+    <div id="end-title">Journey Complete</div>
+    <div id="end-subtitle">You have walked in the footsteps of faith</div>
+    <div id="end-score-display">0</div>
+    <div id="end-score-label">Points Earned</div>
+    <div id="end-message"></div>
+    <button id="btn-restart" onclick="restartGame()">↺ Begin Again</button>
+  </div>
+
+  <!-- Background Music Tracks -->
+  <audio id="bg-music-1" src="song.mp3"  loop preload="auto"></audio>
+  <audio id="bg-music-2" src="song2.mp3" loop preload="auto"></audio>
+
+</div><!-- /#game-container -->
+</div><!-- /#game-scale-wrapper -->
+
+<script>
+'use strict';
+/* ============================================================
+   SECTION A: ASSET DEFINITIONS
+   ============================================================ */
+const SPRITES = {
+  jesus:      'AdultJesusSprite.png',
+  youngJesus: 'YoungChildJesusSprite.png',
+  mary:       'MarySprite.png',
+  maryBaby:   'MaryHoldingJesusSprite.png',
+  joseph:     'JosephSprite.png',
+  gabriel:    'AngelGabrielSprite.png',
+  dove:       'DovespiritSprite.png',
+  john:       'JohntheBaptistSprite.png',
+  simeon:     'SimeonSprite.png',
+  anna:       'AnnaSprite.png',
+  shepherd:   'ShepherdSprite.png',
+  apostle1:   'Apostle1Sprite.png',
+  apostle2:   'Apostle2Sprite.png',
+  leper:      'LeperhealingSprite.png',
+  genericMan: 'GenericManSprite.png',
+  satan:      'SatanSprite.png',
+  manger:     'BabyJesusManger.png',
+};
+
+/* ============================================================
+   SECTION B: STAGE DATA
+   Each stage has: id, title, bgClass (gradient fallback),
+   role, characters, dialogue[], questions[]
+   Questions use an array — 2-3 per stage.
+   Points: 20 → 10 → 5 → 2 based on attempt number.
+   ============================================================ */
+const STAGES = [
+
+  /* ── STAGE 1: THE ANNUNCIATION ─────────────────────────── */
+  {
+    id: 1, title: 'The Annunciation',
+    bgClass: 'bg-annunciation',
+    role: 'Mary',
+    showManger: false, showDove: false,
+    characters: {
+      left:   { src: SPRITES.mary,    pos: '22%' },
+      right:  { src: SPRITES.gabriel, pos: '68%' },
+      center: null,
+    },
+    dialogue: [
+      { speaker: 'Narrator',       portrait: SPRITES.mary,    text: 'In the town of Nazareth, a young woman named Mary lived a simple, faithful life. One evening, everything changed.' },
+      { speaker: 'Angel Gabriel',  portrait: SPRITES.gabriel, text: '"Hail, Mary, full of grace! The Lord is with you. Do not be afraid — you have found favour with God."' },
+      { speaker: 'Angel Gabriel',  portrait: SPRITES.gabriel, text: '"You will conceive and give birth to a son, and you are to call him Jesus. He will be great and will be called the Son of the Most High."' },
+      { speaker: 'Mary',           portrait: SPRITES.mary,    text: '"How will this be, since I am a virgin?" Mary asked with wonder and trust in her heart.' },
+      { speaker: 'Angel Gabriel',  portrait: SPRITES.gabriel, text: '"The Holy Spirit will come upon you, and the power of the Most High will overshadow you. Nothing is impossible with God."' },
+      { speaker: 'Mary',           portrait: SPRITES.mary,    text: '"I am the Lord\'s servant. May your word to me be fulfilled." With those words, Mary accepted God\'s plan completely.' },
+    ],
+    questions: [
+      {
+        prompt: 'What was the name of the angel who appeared to Mary at the Annunciation?',
+        options: ['Angel Michael', 'Angel Gabriel', 'Angel Raphael', 'Angel Uriel'],
+        correct: 1,
+        explanation: 'Correct! The Angel Gabriel was sent by God to announce to Mary that she would conceive and bear the Son of God. (Luke 1:26–38)',
+      },
+      {
+        prompt: 'What were the words with which Mary accepted God\'s plan for her?',
+        options: [
+          '"I will pray and consider this carefully."',
+          '"Let it be done if it is truly God\'s will."',
+          '"I am the Lord\'s servant. May your word to me be fulfilled."',
+          '"I am not worthy of this great honour."',
+        ],
+        correct: 2,
+        explanation: 'Correct! Mary\'s "fiat" — "May your word to me be fulfilled" — is one of the most important acts of faith in Scripture. Her total obedience made the Incarnation possible. (Luke 1:38)',
+      },
+    ],
+  },
+
+  /* ── STAGE 2: THE BIRTH OF JESUS ───────────────────────── */
+  {
+    id: 2, title: 'The Birth of Jesus',
+    bgClass: 'bg-birth',
+    role: 'Joseph',
+    showManger: true, showDove: false,
+    characters: {
+      left:   { src: SPRITES.maryBaby,  pos: '20%' },
+      right:  { src: SPRITES.shepherd,  pos: '72%' },
+      center: { src: SPRITES.joseph,    pos: '48%' },
+    },
+    dialogue: [
+      { speaker: 'Narrator', portrait: SPRITES.joseph,   text: 'Caesar Augustus ordered a census of the whole world. Joseph and Mary travelled to Bethlehem — the city of David — to register.' },
+      { speaker: 'Narrator', portrait: SPRITES.joseph,   text: 'There was no room at the inn. In a humble stable, surrounded by animals, Mary gave birth to Jesus, wrapped him in cloth, and laid him in a manger.' },
+      { speaker: 'Narrator', portrait: SPRITES.shepherd, text: 'That night, an angel appeared to shepherds keeping watch in the fields nearby, filling them with holy fear.' },
+      { speaker: 'Narrator', portrait: SPRITES.shepherd, text: '"Do not be afraid. I bring you good news of great joy for all people. Today in the city of David a Saviour has been born to you; he is the Messiah, the Lord."' },
+      { speaker: 'Narrator', portrait: SPRITES.shepherd, text: 'The shepherds hurried to Bethlehem and found Mary, Joseph, and the baby lying in the manger — just as the angel had told them.' },
+    ],
+    questions: [
+      {
+        prompt: 'Why was there no room for Mary and Joseph to stay in an inn in Bethlehem?',
+        options: [
+          'They arrived too late at night',
+          'Caesar Augustus had reserved all rooms',
+          'The city was crowded due to the census',
+          'Joseph had forgotten to make a reservation',
+        ],
+        correct: 2,
+        explanation: 'Correct! Bethlehem was overcrowded because people from all over came to register for the census ordered by Caesar Augustus. (Luke 2:1–7)',
+      },
+      {
+        prompt: 'Who were the first people to receive the news of Jesus\' birth and visit him in Bethlehem?',
+        options: [
+          'The Three Wise Men from the East',
+          'The High Priest of the Temple',
+          'Shepherds watching their flocks in nearby fields',
+          'Soldiers from Herod\'s palace',
+        ],
+        correct: 2,
+        explanation: 'Correct! Shepherds — ordinary working people — were the very first to hear the angelic announcement and to visit the newborn Jesus. This shows that God\'s good news is for everyone. (Luke 2:8–16)',
+      },
+    ],
+  },
+
+  /* ── STAGE 3: PRESENTATION IN THE TEMPLE ───────────────── */
+  {
+    id: 3, title: 'Presentation in the Temple',
+    bgClass: 'bg-temple',
+    role: 'Mary',
+    showManger: false, showDove: false,
+    characters: {
+      left:   { src: SPRITES.maryBaby, pos: '20%' },
+      right:  { src: SPRITES.anna,     pos: '72%' },
+      center: { src: SPRITES.simeon,   pos: '50%' },
+    },
+    dialogue: [
+      { speaker: 'Narrator', portrait: SPRITES.maryBaby, text: 'According to the Law of Moses, every firstborn son was to be consecrated to the Lord. Joseph and Mary brought the infant Jesus to the Temple in Jerusalem.' },
+      { speaker: 'Narrator', portrait: SPRITES.simeon,   text: 'There was a man named Simeon, righteous and devout, who had been waiting his whole life for the Messiah. The Holy Spirit had revealed to him that he would not die before seeing the Lord\'s Anointed.' },
+      { speaker: 'Simeon',   portrait: SPRITES.simeon,   text: '"Sovereign Lord, as you have promised, you may now dismiss your servant in peace. For my eyes have seen your salvation, which you have prepared in the sight of all nations."' },
+      { speaker: 'Anna',     portrait: SPRITES.anna,     text: 'The prophetess Anna, 84 years old and devoted to God her whole life, came forward and gave thanks to God — speaking about the child to all who were waiting for redemption in Jerusalem.' },
+      { speaker: 'Narrator', portrait: SPRITES.maryBaby, text: 'Simeon blessed them and warned Mary: "A sword will pierce your own soul too." These words foretold the suffering that would come as she watched her son\'s mission unfold.' },
+    ],
+    questions: [
+      {
+        prompt: 'What had the Holy Spirit revealed to Simeon before he saw the infant Jesus?',
+        options: [
+          'That he would live to be 100 years old',
+          'That he would not die before seeing the Messiah',
+          'That he would become a high priest',
+          'That he would travel to Egypt',
+        ],
+        correct: 1,
+        explanation: 'Correct! The Holy Spirit had revealed to Simeon that he would not die before seeing the Lord\'s Anointed — the Christ. When he held the infant Jesus, his lifelong hope was fulfilled. (Luke 2:25–32)',
+      },
+      {
+        prompt: 'What did Simeon\'s canticle (prayer) express when he held the baby Jesus?',
+        options: [
+          'Fear that Herod would find out about the child',
+          'Disappointment that the Messiah was only a baby',
+          'Peace and fulfilment — that he had seen God\'s salvation and could now die in peace',
+          'A request for wealth and long life as a reward',
+        ],
+        correct: 2,
+        explanation: 'Correct! Simeon\'s canticle — the "Nunc Dimittis" — expresses complete peace and fulfilment. Having seen the Messiah, he was ready to depart this life in joy and gratitude. (Luke 2:29–32)',
+      },
+    ],
+  },
+
+  /* ── STAGE 4: FLIGHT INTO EGYPT ────────────────────────── */
+  {
+    id: 4, title: 'Flight into Egypt',
+    bgClass: 'bg-egypt',
+    role: 'Joseph',
+    showManger: false, showDove: false,
+    characters: {
+      left:   { src: SPRITES.joseph,   pos: '25%' },
+      right:  { src: SPRITES.maryBaby, pos: '65%' },
+      center: null,
+    },
+    dialogue: [
+      { speaker: 'Narrator',         portrait: SPRITES.joseph,  text: 'After the Magi visited Bethlehem, King Herod realized he had been outwitted. Furious, he ordered the massacre of all boys under two years old in Bethlehem.' },
+      { speaker: 'Narrator',         portrait: SPRITES.gabriel, text: 'But an angel of the Lord appeared to Joseph in a dream with an urgent warning.' },
+      { speaker: 'Angel (in Dream)', portrait: SPRITES.gabriel, text: '"Get up! Take the child and his mother and escape to Egypt. Stay there until I tell you, for Herod is going to search for the child to kill him."' },
+      { speaker: 'Narrator',         portrait: SPRITES.joseph,  text: 'Joseph got up during the night, took Mary and Jesus, and they began the long journey into Egypt — fulfilling the ancient prophecy: "Out of Egypt I called my son."' },
+      { speaker: 'Narrator',         portrait: SPRITES.joseph,  text: 'After Herod died, the angel appeared to Joseph again: "Get up, take the child and his mother and go to the land of Israel." The Holy Family returned home to Nazareth.' },
+    ],
+    questions: [
+      {
+        prompt: 'How did Joseph receive the warning to flee to Egypt with his family?',
+        options: [
+          'A star appeared in the sky pointing south',
+          'Mary had a vision while praying',
+          'An angel appeared to him in a dream',
+          'The Magi sent him a letter',
+        ],
+        correct: 2,
+        explanation: 'Correct! An angel of the Lord appeared to Joseph in a dream and warned him to flee to Egypt to protect the infant Jesus from Herod\'s soldiers. (Matthew 2:13)',
+      },
+      {
+        prompt: 'Which Old Testament prophecy was fulfilled when the Holy Family returned from Egypt?',
+        options: [
+          '"A virgin will conceive and give birth to a son"',
+          '"Out of Egypt I called my son"',
+          '"He will be born in the city of David"',
+          '"His name shall be called Wonderful Counsellor"',
+        ],
+        correct: 1,
+        explanation: 'Correct! The prophet Hosea wrote "Out of Egypt I called my son." Matthew\'s Gospel points to this prophecy being fulfilled when Jesus returned from Egypt with his family. (Matthew 2:15; Hosea 11:1)',
+      },
+    ],
+  },
+
+  /* ── STAGE 5: FINDING IN THE TEMPLE ────────────────────── */
+  {
+    id: 5, title: 'Finding in the Temple',
+    bgClass: 'bg-templefinding',
+    role: 'Young Jesus',
+    showManger: false, showDove: false,
+    characters: {
+      left:   { src: SPRITES.joseph,     pos: '18%' },
+      center: { src: SPRITES.youngJesus, pos: '50%' },
+      right:  { src: SPRITES.mary,       pos: '76%' },
+    },
+    dialogue: [
+      { speaker: 'Narrator',    portrait: SPRITES.youngJesus, text: 'Every year, Jesus\' family travelled to Jerusalem for the Passover festival. When Jesus was twelve years old, they made the journey as usual.' },
+      { speaker: 'Narrator',    portrait: SPRITES.youngJesus, text: 'On the way home, Mary and Joseph assumed Jesus was with others in their group. After a full day of travel, they searched — and could not find him. They rushed back to Jerusalem in panic.' },
+      { speaker: 'Narrator',    portrait: SPRITES.youngJesus, text: 'After three days of searching, they found him in the Temple courts — sitting among the teachers, listening and asking questions. Everyone was amazed at his understanding.' },
+      { speaker: 'Mary',        portrait: SPRITES.mary,       text: '"Son, why have you treated us like this? Your father and I have been anxiously searching for you!"' },
+      { speaker: 'Young Jesus', portrait: SPRITES.youngJesus, text: '"Why were you searching for me? Did you not know I had to be in my Father\'s house?"' },
+      { speaker: 'Narrator',    portrait: SPRITES.youngJesus, text: 'They did not fully understand what he meant. But Jesus returned with them to Nazareth and was obedient to them. He grew in wisdom and stature, and in favour with God and man.' },
+    ],
+    questions: [
+      {
+        prompt: 'How many days did it take Mary and Joseph to find the young Jesus after losing him at Passover?',
+        options: ['One day', 'Two days', 'Three days', 'One week'],
+        correct: 2,
+        explanation: 'Correct! It took three days to find Jesus — he was in the Temple courts, astonishing the teachers with his wisdom. (Luke 2:46)',
+      },
+      {
+        prompt: 'What did Jesus mean when he said he had to be "in my Father\'s house"?',
+        options: [
+          'He meant Joseph\'s carpentry workshop in Nazareth',
+          'He was revealing his divine identity — the Temple was his heavenly Father\'s house',
+          'He meant he had to stay with the priests as an apprentice',
+          'He was referring to a relative\'s home in Jerusalem',
+        ],
+        correct: 1,
+        explanation: 'Correct! By calling the Temple "my Father\'s house," the twelve-year-old Jesus revealed his unique divine identity. God was his Father in a way that went beyond even Joseph. (Luke 2:49)',
+      },
+    ],
+  },
+
+  /* ── STAGE 6: BAPTISM OF JESUS ─────────────────────────── */
+  {
+    id: 6, title: 'Baptism of Jesus',
+    bgClass: 'bg-baptism',
+    role: 'Jesus',
+    showManger: false, showDove: true,
+    characters: {
+      left:   { src: SPRITES.jesus, pos: '28%' },
+      right:  { src: SPRITES.john,  pos: '66%' },
+      center: null,
+    },
+    dialogue: [
+      { speaker: 'Narrator',         portrait: SPRITES.john,  text: 'John the Baptist had been preaching in the wilderness: "Repent, for the kingdom of heaven has come near!" People came from Jerusalem and all Judea to be baptised in the Jordan River.' },
+      { speaker: 'John the Baptist', portrait: SPRITES.john,  text: '"I baptise you with water for repentance. But after me comes one who is more powerful than I am, whose sandals I am not worthy to carry."' },
+      { speaker: 'Narrator',         portrait: SPRITES.jesus, text: 'Then Jesus came from Galilee to the Jordan to be baptised by John. John tried to refuse him.' },
+      { speaker: 'John the Baptist', portrait: SPRITES.john,  text: '"I need to be baptised by you — and do you come to me?"' },
+      { speaker: 'Jesus',            portrait: SPRITES.jesus, text: '"Let it be so now; it is proper for us to do this to fulfil all righteousness." And John agreed.' },
+      { speaker: 'Narrator',         portrait: SPRITES.dove,  text: 'As soon as Jesus was baptised and came up from the water, the heavens opened. He saw the Spirit of God descending like a dove and landing on him.' },
+      { speaker: 'Voice of the Father', portrait: SPRITES.dove, text: '"This is my Son, whom I love; with him I am well pleased." — The voice of God the Father rang out from heaven, revealing all three Persons of the Trinity.' },
+    ],
+    questions: [
+      {
+        prompt: 'What were the THREE signs that occurred at Jesus\' baptism? (Choose the most complete answer)',
+        options: [
+          'The Jordan River stopped flowing, the sky turned dark, and thunder roared',
+          'The heavens opened, the Spirit descended as a dove, and a voice from heaven spoke',
+          'A bright star appeared, angels sang, and John fell to the ground',
+          'The water turned to light, a pillar of fire appeared, and a scroll descended',
+        ],
+        correct: 1,
+        explanation: 'Correct! Three signs: the heavens opened (the Father\'s glory), the Spirit descended as a dove (the Holy Spirit), and a voice from heaven spoke (God the Father). All three Persons of the Trinity were revealed. (Matthew 3:16–17)',
+      },
+      {
+        prompt: 'What does the dove descending upon Jesus at his baptism represent?',
+        options: [
+          'The soul of John the Baptist leaving his body',
+          'A sign that the Jordan River was holy',
+          'The Holy Spirit — the third Person of the Trinity — coming upon Jesus',
+          'An angel sent as a messenger from heaven',
+        ],
+        correct: 2,
+        explanation: 'Correct! The dove is a symbol of the Holy Spirit. At Jesus\' baptism, the Holy Spirit descended visibly, anointing Jesus for his public mission and confirming his divine identity. (Matthew 3:16)',
+      },
+      {
+        prompt: 'What did the voice from heaven declare at Jesus\' baptism?',
+        options: [
+          '"This is my prophet, listen to him carefully."',
+          '"Rise and go — your ministry is beginning."',
+          '"This is my Son, whom I love; with him I am well pleased."',
+          '"Behold the Lamb of God who takes away the sin of the world."',
+        ],
+        correct: 2,
+        explanation: 'Correct! God the Father\'s voice proclaimed "This is my Son, whom I love; with him I am well pleased." This is a direct revelation of the Trinity — Father, Son, and Holy Spirit present together. (Matthew 3:17)',
+      },
+    ],
+  },
+
+  /* ── STAGE 7: TEMPTATION IN THE DESERT ─────────────────── */
+  {
+    id: 7, title: 'Temptation in the Desert',
+    bgClass: 'bg-temptation',
+    role: 'Jesus',
+    showManger: false, showDove: false,
+    characters: {
+      left:   { src: SPRITES.jesus, pos: '28%' },
+      right:  { src: SPRITES.satan, pos: '68%' },
+      center: null,
+    },
+    dialogue: [
+      { speaker: 'Narrator', portrait: SPRITES.jesus, text: 'After his baptism, Jesus was led by the Spirit into the wilderness. For forty days and forty nights he fasted, and at the end he was hungry.' },
+      { speaker: 'Satan',    portrait: SPRITES.satan, text: 'First Temptation: "If you are the Son of God, tell these stones to become bread." Satan attacked Jesus at his point of physical weakness — hunger.' },
+      { speaker: 'Jesus',    portrait: SPRITES.jesus, text: '"It is written: Man shall not live on bread alone, but on every word that comes from the mouth of God." Jesus rejected physical comfort over faithfulness to God.' },
+      { speaker: 'Satan',    portrait: SPRITES.satan, text: 'Second Temptation: Satan took him to the highest point of the Temple. "Throw yourself down — God\'s angels will catch you!" He tempted Jesus to test God\'s protection recklessly.' },
+      { speaker: 'Jesus',    portrait: SPRITES.jesus, text: '"It is also written: Do not put the Lord your God to the test." Jesus refused to use his divine power to force God\'s hand.' },
+      { speaker: 'Satan',    portrait: SPRITES.satan, text: 'Third Temptation: From a high mountain, Satan showed Jesus all the kingdoms of the world. "All this I will give you if you bow down and worship me."' },
+      { speaker: 'Jesus',    portrait: SPRITES.jesus, text: '"Away from me, Satan! For it is written: Worship the Lord your God, and serve him only." The devil left, and angels came and attended to Jesus.' },
+    ],
+    questions: [
+      {
+        prompt: 'What was Satan\'s FIRST temptation of Jesus in the desert?',
+        options: [
+          'To jump from the highest point of the Temple',
+          'To turn stones into bread to satisfy his hunger',
+          'To bow down and worship Satan in exchange for worldly power',
+          'To call down angels and show his divine power',
+        ],
+        correct: 1,
+        explanation: 'Correct! The first temptation was to turn stones to bread — attacking Jesus at his physical weakness after 40 days of fasting. Jesus refused, showing trust in God above physical needs. (Matthew 4:3–4)',
+      },
+      {
+        prompt: 'What was Satan\'s THIRD and final temptation of Jesus?',
+        options: [
+          'To turn the water of the Jordan into wine',
+          'To avoid the cross and live a long, peaceful life',
+          'To receive all the kingdoms of the world by worshipping Satan',
+          'To prove his power by summoning an angelic army',
+        ],
+        correct: 2,
+        explanation: 'Correct! The third temptation offered Jesus political power over all earthly kingdoms — if he would worship Satan. Jesus refused absolutely: "Worship the Lord your God, and serve him only." (Matthew 4:8–10)',
+      },
+      {
+        prompt: 'How did Jesus respond to each of Satan\'s three temptations in the desert?',
+        options: [
+          'He used miraculous power to silence Satan each time',
+          'He called on angels to drive Satan away',
+          'He fasted and prayed silently until Satan left',
+          'He quoted Scripture — the Word of God — each time',
+        ],
+        correct: 3,
+        explanation: 'Correct! Jesus responded to each temptation by quoting Scripture. This shows us that the Word of God is our most powerful defence against temptation. Jesus models for us how to resist evil. (Matthew 4:4, 7, 10)',
+      },
+    ],
+  },
+
+  /* ── STAGE 8: CALLING OF THE APOSTLES ──────────────────── */
+  {
+    id: 8, title: 'Calling of the Apostles',
+    bgClass: 'bg-apostles',
+    role: 'Jesus',
+    showManger: false, showDove: false,
+    characters: {
+      left:   { src: SPRITES.apostle1, pos: '18%' },
+      center: { src: SPRITES.jesus,    pos: '50%' },
+      right:  { src: SPRITES.apostle2, pos: '76%' },
+    },
+    dialogue: [
+      { speaker: 'Narrator', portrait: SPRITES.jesus,    text: 'As Jesus walked beside the Sea of Galilee, he saw two brothers — Simon called Peter, and Andrew — casting a net into the lake, for they were fishermen.' },
+      { speaker: 'Jesus',    portrait: SPRITES.jesus,    text: '"Come, follow me, and I will send you out to fish for people."' },
+      { speaker: 'Narrator', portrait: SPRITES.apostle1, text: 'At once they left their nets and followed him. Going on from there, Jesus saw two more brothers, James and John, and called them too. They immediately left their boat and their father.' },
+      { speaker: 'Narrator', portrait: SPRITES.jesus,    text: 'Later, Jesus saw a man named Matthew sitting at a tax collector\'s booth. Tax collectors were despised — seen as traitors who worked for Rome and often overcharged their own people.' },
+      { speaker: 'Jesus',    portrait: SPRITES.jesus,    text: '"Follow me," Jesus said to Matthew. And Matthew got up and followed him immediately — showing that no one is beyond the reach of God\'s call.' },
+      { speaker: 'Jesus',    portrait: SPRITES.jesus,    text: '"You did not choose me, but I chose you and appointed you so that you might go and bear fruit — fruit that will last." Jesus chose twelve apostles in total to lead his Church.' },
+    ],
+    questions: [
+      {
+        prompt: 'What were Simon Peter and Andrew doing when Jesus called them to follow him?',
+        options: [
+          'Praying in the synagogue',
+          'Fishing — casting a net into the Sea of Galilee',
+          'Selling goods in the marketplace',
+          'Walking on the road to Jerusalem',
+        ],
+        correct: 1,
+        explanation: 'Correct! Simon (Peter) and Andrew were fishermen casting their net when Jesus said "Come, follow me — I will make you fishers of people." They left everything immediately. (Matthew 4:18–20)',
+      },
+      {
+        prompt: 'Why was it shocking and surprising that Jesus called Matthew to be one of his apostles?',
+        options: [
+          'Matthew was already a respected rabbi and teacher of the Law',
+          'Matthew was a Roman soldier who had persecuted Jewish people',
+          'Matthew was a tax collector — considered a traitor and public sinner by Jewish society',
+          'Matthew was a foreigner who did not speak Aramaic',
+        ],
+        correct: 2,
+        explanation: 'Correct! Tax collectors were deeply despised in Jewish society — they worked for the Roman Empire and were known for dishonesty. By calling Matthew, Jesus showed that his invitation is for everyone, including society\'s outcasts. (Matthew 9:9)',
+      },
+    ],
+  },
+
+  /* ── STAGE 9: TEACHING MINISTRY ────────────────────────── */
+  {
+    id: 9, title: 'Teaching Ministry',
+    bgClass: 'bg-teaching',
+    role: 'Disciple',
+    showManger: false, showDove: false,
+    characters: {
+      left:   { src: SPRITES.genericMan, pos: '20%' },
+      center: { src: SPRITES.jesus,      pos: '50%' },
+      right:  { src: SPRITES.apostle1,   pos: '76%' },
+    },
+    dialogue: [
+      { speaker: 'Narrator', portrait: SPRITES.jesus, text: 'Jesus taught in parables — simple stories with deep spiritual meaning. Through these stories, he revealed the nature of God\'s Kingdom to all who would listen.' },
+      { speaker: 'Jesus',    portrait: SPRITES.jesus, text: '"A farmer went out to sow his seed. Some fell on the path — birds ate it. Some fell on rocky ground and withered. Some fell among thorns and was choked. But some fell on good soil and produced a crop — a hundred, sixty, or thirty times what was sown."' },
+      { speaker: 'Jesus',    portrait: SPRITES.jesus, text: '"The seed is the Word of God. The good soil represents those who hear the word, understand it, accept it, and produce fruit through faithful living."' },
+      { speaker: 'Narrator', portrait: SPRITES.jesus, text: 'When asked "Who is my neighbour?", Jesus told the Parable of the Good Samaritan — a story that shattered social barriers and defined love in action.' },
+      { speaker: 'Jesus',    portrait: SPRITES.jesus, text: '"A man was attacked by robbers and left half dead. A priest passed by. A Levite passed by. But a Samaritan — an outsider despised by Jews — saw him, had compassion, and cared for him at his own expense."' },
+      { speaker: 'Jesus',    portrait: SPRITES.jesus, text: '"Which of the three was a neighbour?" "The one who showed mercy." Jesus said: "Go and do likewise." True love of neighbour crosses every social boundary.' },
+    ],
+    questions: [
+      {
+        prompt: 'In the Parable of the Good Samaritan, who ultimately stopped and helped the injured man on the road?',
+        options: ['A Jewish priest', 'A Levite', 'A Roman soldier', 'A Samaritan'],
+        correct: 3,
+        explanation: 'Correct! A Samaritan — despised by Jews in Jesus\' time — was the one who showed compassion, while the priest and Levite passed by. Jesus used this to show that love of neighbour knows no social boundaries. (Luke 10:25–37)',
+      },
+      {
+        prompt: 'In the Parable of the Sower, what do the seeds represent?',
+        options: [
+          'The faith of the apostles',
+          'The Word of God',
+          'Wealth and material possessions',
+          'The people of Israel',
+        ],
+        correct: 1,
+        explanation: 'Correct! Jesus explains that the seed is the Word of God. The different soils represent how different people receive God\'s word — some reject it, some accept it briefly, but those on "good soil" hear, understand, and bear lasting fruit. (Matthew 13:18–23)',
+      },
+    ],
+  },
+
+  /* ── STAGE 10: HEALING MINISTRY ────────────────────────── */
+  {
+    id: 10, title: 'Healing Ministry',
+    bgClass: 'bg-healing',
+    role: 'Disciple',
+    showManger: false, showDove: false,
+    characters: {
+      left:   { src: SPRITES.leper,    pos: '20%' },
+      center: { src: SPRITES.jesus,    pos: '50%' },
+      right:  { src: SPRITES.apostle2, pos: '74%' },
+    },
+    dialogue: [
+      { speaker: 'Narrator',          portrait: SPRITES.jesus, text: 'Jesus performed many miracles throughout his ministry — healing the sick, restoring sight to the blind, and raising the dead — as signs of God\'s kingdom breaking into the world.' },
+      { speaker: 'Narrator',          portrait: SPRITES.leper, text: 'One day, a man with leprosy came and knelt before him. Leprosy caused not just physical suffering but complete social rejection — lepers were declared "unclean" by Jewish law.' },
+      { speaker: 'Man with Leprosy',  portrait: SPRITES.leper, text: '"Lord, if you are willing, you can make me clean."' },
+      { speaker: 'Jesus',             portrait: SPRITES.jesus, text: 'Jesus reached out his hand and touched the man — something no one else would dare to do. This single act of touch was itself a miracle of compassion.' },
+      { speaker: 'Jesus',             portrait: SPRITES.jesus, text: '"I am willing. Be clean!" Immediately the leprosy left him, and he was cured.' },
+      { speaker: 'Narrator',          portrait: SPRITES.jesus, text: 'Jesus also healed a paralyzed man lowered through a roof by his friends. He said: "Son, your sins are forgiven." The teachers objected — only God can forgive sins! Then Jesus said: "Get up and walk." And the man did.' },
+      { speaker: 'Narrator',          portrait: SPRITES.jesus, text: 'These miracles revealed Jesus\' divine authority over sickness, sin, and death — he came to bring wholeness of body, mind, and spirit to all who came to him in faith.' },
+    ],
+    questions: [
+      {
+        prompt: 'What did Jesus do that shocked everyone when he healed the man with leprosy?',
+        options: [
+          'He healed him from far away without approaching',
+          'He prayed for three days before healing him',
+          'He reached out and physically touched the man',
+          'He told the man to wash in the River Jordan',
+        ],
+        correct: 2,
+        explanation: 'Correct! Jesus touched the leper — an act of profound compassion, since lepers were considered ritually "unclean" and untouchable by Jewish law. Jesus showed that love is stronger than any social barrier. (Matthew 8:2–3)',
+      },
+      {
+        prompt: 'When Jesus healed the paralyzed man, what did he say FIRST — before commanding him to walk?',
+        options: [
+          '"Be healed in body and spirit."',
+          '"Rise and walk — your faith has saved you."',
+          '"Son, your sins are forgiven."',
+          '"Do you believe that I am able to do this?"',
+        ],
+        correct: 2,
+        explanation: 'Correct! Jesus first said "Your sins are forgiven," which caused an outcry — the teachers knew only God could forgive sins. By saying this, Jesus was claiming divine authority. The physical healing then proved his power. (Mark 2:5–12)',
+      },
+    ],
+  },
+
+]; // end STAGES
+
+/* ============================================================
+   SECTION C: GAME STATE
+   ============================================================ */
+let state = {
+  stage:             0,     // index into STAGES[]
+  dialogueIdx:       0,     // index into stage.dialogue[]
+  questionIdx:       0,     // index into stage.questions[]
+  attempts:          0,     // wrong answers on current question
+  score:             0,     // running total points
+  typing:            false,
+  typeTimer:         null,
+  questionOpen:      false,
+  answeredCorrectly: false,
+  gameStarted:       false,
+};
+
+/* ============================================================
+   SECTION D: DOM REFERENCES
+   ============================================================ */
+const DOM = {
+  // Scene area
+  bg:               document.getElementById('background-layer'),
+  spriteLeft:       document.getElementById('sprite-left'),
+  spriteCenter:     document.getElementById('sprite-center'),
+  spriteRight:      document.getElementById('sprite-right'),
+  spriteManger:     document.getElementById('sprite-manger'),
+  spriteDove:       document.getElementById('sprite-dove'),
+  // HUD
+  progressFill:     document.getElementById('progress-fill'),
+  stageCounter:     document.getElementById('stage-counter'),
+  roleName:         document.getElementById('role-name'),
+  scoreVal:         document.getElementById('panel-score-value'),  // single score display in info bar
+  titleBanner:      document.getElementById('stage-title-banner'),
+  stageNumLabel:    document.getElementById('stage-number-label'),
+  stageTitleText:   document.getElementById('stage-title-text'),
+  // Bottom panel — dialogue
+  dialogueBox:      document.getElementById('dialogue-box'),
+  portrait:         document.getElementById('dialogue-portrait'),
+  speakerName:      document.getElementById('dialogue-speaker-name'),
+  dialogueText:     document.getElementById('dialogue-text'),
+  dialogueHint:     document.getElementById('dialogue-hint'),
+  btnContinue:      document.getElementById('btn-continue'),
+  // Bottom panel — questions
+  questionOverlay:  document.getElementById('question-overlay'),
+  questionLabel:    document.getElementById('question-label'),
+  questionPtsHint:  document.getElementById('question-pts-hint'),
+  questionText:     document.getElementById('question-text'),
+  answerGrid:       document.getElementById('answer-grid'),
+  feedbackText:     document.getElementById('feedback-text'),
+  btnNextStage:     document.getElementById('btn-next-stage'),
+  // Full-screen overlays
+  titleScreen:      document.getElementById('title-screen'),
+  endScreen:        document.getElementById('end-screen'),
+  endScoreDisplay:  document.getElementById('end-score-display'),
+  endMessage:       document.getElementById('end-message'),
+  transitionFade:   document.getElementById('transition-fade'),
+};
+
+/* ============================================================
+   SECTION E: SCALING
+   Fits the 1280×720 game container to any viewport.
+   ============================================================ */
+function scaleGame() {
+  const wrapper = document.getElementById('game-scale-wrapper');
+  const container = document.getElementById('game-container');
+  const scale = Math.min(wrapper.clientWidth / 1280, wrapper.clientHeight / 720);
+  container.style.transform = `scale(${scale})`;
+}
+window.addEventListener('resize', scaleGame);
+scaleGame();
+
+/* ============================================================
+   SECTION F: TYPEWRITER EFFECT
+   ============================================================ */
+function typeText(element, text, speed = 26, onDone = null) {
+  if (state.typeTimer) clearInterval(state.typeTimer);
+  state.typing = true;
+  DOM.btnContinue.classList.remove('visible');
+  element.textContent = '';
+  let i = 0;
+  state.typeTimer = setInterval(() => {
+    element.textContent += text[i];
+    i++;
+    if (i >= text.length) {
+      clearInterval(state.typeTimer);
+      state.typeTimer = null;
+      state.typing = false;
+      DOM.btnContinue.classList.add('visible');
+      if (onDone) onDone();
+    }
+  }, speed);
+}
+
+function skipTyping() {
+  if (state.typing && state.typeTimer) {
+    clearInterval(state.typeTimer);
+    state.typeTimer = null;
+    state.typing = false;
+    const line = STAGES[state.stage].dialogue[state.dialogueIdx];
+    DOM.dialogueText.textContent = line.text;
+    DOM.btnContinue.classList.add('visible');
+  }
+}
+
+/* ============================================================
+   SECTION G: SPRITE POSITIONING & ANIMATION
+   ============================================================ */
+function positionSprite(el, xPercent, fromSide) {
+  el.style.transition = 'none';
+  el.style.opacity = '0';
+  el.style.left = fromSide === 'left' ? '-15%' : '110%';
+  el.offsetHeight; // force reflow
+  el.style.transition = 'left 0.95s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.7s ease';
+  el.style.left = xPercent;
+  el.style.opacity = '1'; // inline wins over class
+  el.classList.add('idle-anim');
+}
+
+function hideSprite(el) {
+  el.classList.remove('visible', 'idle-anim', 'talking');
+  el.style.opacity = '0';
+  el.style.left = '-15%';
+  el.src = '';
+}
+
+function loadStageSprites(stageData) {
+  [DOM.spriteLeft, DOM.spriteCenter, DOM.spriteRight].forEach(hideSprite);
+  DOM.spriteManger.classList.remove('visible');
+  DOM.spriteDove.classList.remove('dove-animate');
+  DOM.spriteDove.style.opacity = '0';
+
+  const { characters, showManger, showDove } = stageData;
+
+  if (characters.left) {
+    DOM.spriteLeft.src = characters.left.src;
+    setTimeout(() => positionSprite(DOM.spriteLeft, characters.left.pos, 'left'), 600);
+  }
+  if (characters.center) {
+    DOM.spriteCenter.src = characters.center.src;
+    setTimeout(() => positionSprite(DOM.spriteCenter, characters.center.pos, 'left'), 900);
+  }
+  if (characters.right) {
+    DOM.spriteRight.src = characters.right.src;
+    setTimeout(() => positionSprite(DOM.spriteRight, characters.right.pos, 'right'), 750);
+  }
+  if (showManger) {
+    setTimeout(() => DOM.spriteManger.classList.add('visible'), 1000);
+  }
+  if (showDove) {
+    setTimeout(() => {
+      DOM.spriteDove.style.opacity = '1';
+      DOM.spriteDove.classList.add('dove-animate');
+    }, 2200);
+  }
+}
+
+function highlightSpeaker(speakerName) {
+  [DOM.spriteLeft, DOM.spriteCenter, DOM.spriteRight].forEach(s => s.classList.remove('talking'));
+  const stageData = STAGES[state.stage];
+  const name = speakerName.toLowerCase();
+  const chars = stageData.characters;
+
+  const match = (src, ...keys) => keys.some(k => src.toLowerCase().includes(k));
+  let target = null;
+
+  if (chars.left && chars.left.src && (
+    (name.includes('mary')       && match(chars.left.src, 'mary')) ||
+    (name.includes('gabriel')    && match(chars.left.src, 'gabriel')) ||
+    (name.includes('joseph')     && match(chars.left.src, 'joseph')) ||
+    (name.includes('john')       && match(chars.left.src, 'john')) ||
+    (name.includes('simeon')     && match(chars.left.src, 'simeon')) ||
+    (name.includes('anna')       && match(chars.left.src, 'anna')) ||
+    (name.includes('shepherd')   && match(chars.left.src, 'shepherd')) ||
+    (name.includes('leper')      && match(chars.left.src, 'leper')) ||
+    (name.includes('man')        && match(chars.left.src, 'generic')) ||
+    (name.includes('apostle')    && match(chars.left.src, 'apostle1')) ||
+    (name.includes('young jesus') && match(chars.left.src, 'young'))
+  )) target = DOM.spriteLeft;
+
+  if (!target && chars.right && chars.right.src && (
+    (name.includes('gabriel')    && match(chars.right.src, 'gabriel')) ||
+    (name.includes('john')       && match(chars.right.src, 'john')) ||
+    (name.includes('anna')       && match(chars.right.src, 'anna')) ||
+    (name.includes('shepherd')   && match(chars.right.src, 'shepherd')) ||
+    (name.includes('satan')      && match(chars.right.src, 'satan')) ||
+    (name.includes('apostle')    && match(chars.right.src, 'apostle2')) ||
+    (name.includes('mary')       && match(chars.right.src, 'mary'))
+  )) target = DOM.spriteRight;
+
+  if (!target && chars.center && chars.center.src && (
+    (name.includes('jesus')      && !name.includes('young') && match(chars.center.src, 'adult')) ||
+    (name.includes('young jesus') && match(chars.center.src, 'young')) ||
+    (name.includes('joseph')     && match(chars.center.src, 'joseph')) ||
+    (name.includes('simeon')     && match(chars.center.src, 'simeon'))
+  )) target = DOM.spriteCenter;
+
+  // Fallback for Jesus as main speaker
+  if (!target && name.includes('jesus') && !name.includes('young')) {
+    if (chars.left && chars.left.src && match(chars.left.src, 'adult'))  target = DOM.spriteLeft;
+    else if (chars.center && chars.center.src) target = DOM.spriteCenter;
+    else target = DOM.spriteLeft;
+  }
+
+  if (target) target.classList.add('talking');
+}
+
+/* ============================================================
+   SECTION H: BACKGROUND LOADING — DYNAMIC SYSTEM
+   Attempts to load Stage{N}.png for each stage.
+   Stage 5 reuses Stage3.png (same temple background).
+   Falls back silently to CSS gradient classes if image absent.
+   ============================================================ */
+function loadBackground(stageData) {
+  // Clear previous background
+  DOM.bg.className = '';
+  DOM.bg.style.background = '';
+  DOM.bg.style.backgroundImage = '';
+  void DOM.bg.offsetHeight; // force reflow
+
+  const stageNum  = stageData.id;
+  // Stage 5 reuses the temple image (Stage3.png)
+  const imageFile = (stageNum === 5) ? 'Stage3.png' : `Stage${stageNum}.png`;
+
+  const testImg = new Image();
+  testImg.onload = () => {
+    // Image found — apply it
+    DOM.bg.style.background = `url('${imageFile}') center center / cover no-repeat`;
+  };
+  testImg.onerror = () => {
+    // Image not present — fall back to CSS gradient class
+    DOM.bg.classList.add(stageData.bgClass);
+  };
+  testImg.src = imageFile;
+}
+
+/* ============================================================
+   SECTION I: STAGE LOADING
+   ============================================================ */
+function loadStage(idx) {
+  const stageData = STAGES[idx];
+  state.dialogueIdx       = 0;
+  state.questionIdx       = 0;
+  state.attempts          = 0;
+  state.answeredCorrectly = false;
+
+  // Update HUD
+  const pct = (idx / STAGES.length) * 100;
+  DOM.progressFill.style.width = pct + '%';
+  DOM.stageCounter.textContent = `Stage ${idx + 1} of ${STAGES.length}`;
+  DOM.roleName.textContent = stageData.role;
+  updateScoreDisplay();
+
+  // Load background (dynamic image system)
+  loadBackground(stageData);
+
+  // Stage title banner
+  DOM.stageNumLabel.textContent  = `Stage ${stageData.id}`;
+  DOM.stageTitleText.textContent = stageData.title;
+  DOM.titleBanner.classList.add('visible');
+  setTimeout(() => DOM.titleBanner.classList.remove('visible'), 2800);
+
+  // Load sprites
+  loadStageSprites(stageData);
+
+  // Update music for this stage index
+  updateMusicForStage(idx);
+
+  // Open dialogue after brief delay
+  setTimeout(() => {
+    DOM.dialogueBox.classList.add('open');
+    renderDialogueLine();
+  }, 1000);
+}
+
+/* ============================================================
+   SECTION J: DIALOGUE RENDERING
+   ============================================================ */
+function renderDialogueLine() {
+  const stage = STAGES[state.stage];
+  const line  = stage.dialogue[state.dialogueIdx];
+
+  DOM.speakerName.textContent = line.speaker;
+  DOM.portrait.src = line.portrait || SPRITES.jesus;
+  DOM.btnContinue.classList.remove('visible');
+
+  highlightSpeaker(line.speaker);
+  typeText(DOM.dialogueText, line.text, 26);
+}
+
+function advanceDialogue() {
+  if (state.typing)        { skipTyping(); return; }
+  if (state.questionOpen)  { return; }
+
+  const stage = STAGES[state.stage];
+  state.dialogueIdx++;
+
+  if (state.dialogueIdx >= stage.dialogue.length) {
+    // All dialogue shown — proceed to first question
+    DOM.btnContinue.classList.remove('visible');
+    state.questionIdx = 0;
+    state.attempts    = 0;
+    showQuestion();
+  } else {
+    renderDialogueLine();
+  }
+}
+
+// Keyboard shortcut
+document.addEventListener('keydown', e => {
+  if (!state.gameStarted) return;
+  if (e.code === 'Space' || e.code === 'Enter') {
+    e.preventDefault();
+    if (!state.questionOpen) advanceDialogue();
+  }
+});
+
+/* ============================================================
+   SECTION K: QUESTION SYSTEM
+   Supports multiple questions per stage (questions array).
+   Points awarded: 20 / 10 / 5 / 2 based on attempt number.
+   ============================================================ */
+const POINTS_TABLE = [20, 10, 5, 2]; // indexed by attempt count
+
+function getPointsAvailable() {
+  return POINTS_TABLE[Math.min(state.attempts, POINTS_TABLE.length - 1)];
+}
+
+function showQuestion() {
+  state.questionOpen      = true;
+  state.answeredCorrectly = false;
+
+  const questions = STAGES[state.stage].questions;
+  const q         = questions[state.questionIdx];
+  const qNum      = state.questionIdx + 1;
+  const qTotal    = questions.length;
+
+  DOM.questionLabel.textContent  = qTotal > 1
+    ? `✦ Question ${qNum} of ${qTotal} ✦`
+    : '✦ Knowledge Check ✦';
+  DOM.questionPtsHint.textContent = `First correct: ${POINTS_TABLE[0]} pts`;
+  DOM.questionText.textContent    = q.prompt;
+  DOM.feedbackText.textContent    = '';
+  DOM.feedbackText.className      = 'feedback-text';
+  DOM.btnNextStage.classList.remove('visible');
+  DOM.answerGrid.innerHTML        = '';
+
+  const letters = ['A', 'B', 'C', 'D'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.innerHTML = `<span class="letter">${letters[i]}</span>${opt}`;
+    btn.addEventListener('click', () => handleAnswer(i, btn));
+    DOM.answerGrid.appendChild(btn);
+  });
+
+  DOM.questionOverlay.classList.add('open');
+}
+
+function handleAnswer(idx, btn) {
+  if (state.answeredCorrectly) return;
+
+  const q       = STAGES[state.stage].questions[state.questionIdx];
+  const allBtns = DOM.answerGrid.querySelectorAll('.answer-btn');
+
+  if (idx === q.correct) {
+    // ── CORRECT ──
+    const pts = getPointsAvailable();
+    btn.classList.add('correct');
+    allBtns.forEach(b => b.disabled = true);
+    state.answeredCorrectly = true;
+    state.score += pts;
+    updateScoreDisplay(true); // bump animation
+
+    DOM.feedbackText.innerHTML = `<strong style="color:var(--gold)">+${pts} pts</strong> — ${q.explanation}`;
+    DOM.feedbackText.classList.add('visible', 'correct-fb');
+
+    const hasMoreQ    = state.questionIdx < STAGES[state.stage].questions.length - 1;
+    const isLastStage = state.stage >= STAGES.length - 1;
+
+    setTimeout(() => {
+      if (hasMoreQ) {
+        DOM.btnNextStage.textContent = 'Next Question →';
+      } else {
+        DOM.btnNextStage.textContent = isLastStage ? 'Complete Journey →' : 'Next Stage →';
+      }
+      DOM.btnNextStage.classList.add('visible');
+    }, 1400);
+
+  } else {
+    // ── WRONG ──
+    state.attempts++;
+    btn.classList.add('wrong');
+    btn.disabled = true;
+
+    const nextPts = getPointsAvailable();
+    DOM.feedbackText.textContent = `Not quite — reflect on the story and try again. Next correct answer: ${nextPts} pts`;
+    DOM.feedbackText.classList.add('visible', 'wrong-fb');
+    DOM.questionPtsHint.textContent = `Next correct: ${nextPts} pts`;
+
+    setTimeout(() => {
+      DOM.feedbackText.textContent = '';
+      DOM.feedbackText.classList.remove('visible', 'wrong-fb');
+    }, 2200);
+  }
+}
+
+/* Called by the "Next Question / Next Stage" button */
+function advanceQuestion() {
+  const questions   = STAGES[state.stage].questions;
+  const hasMoreQ    = state.questionIdx < questions.length - 1;
+
+  DOM.btnNextStage.classList.remove('visible');
+  DOM.feedbackText.classList.remove('visible', 'correct-fb', 'wrong-fb');
+  DOM.feedbackText.textContent = '';
+
+  if (hasMoreQ) {
+    // Show the next question in the same stage
+    state.questionIdx++;
+    state.attempts          = 0;
+    state.answeredCorrectly = false;
+    showQuestion();
+  } else {
+    // All questions for this stage done — move to next stage
+    nextStage();
+  }
+}
+
+/* ============================================================
+   SECTION L: STAGE PROGRESSION
+   ============================================================ */
+function nextStage() {
+  state.questionOpen = false;
+  DOM.questionOverlay.classList.remove('open');
+  DOM.btnNextStage.classList.remove('visible');
+
+  if (state.stage >= STAGES.length - 1) {
+    showEndScreen();
+    return;
+  }
+
+  // Fade transition
+  DOM.transitionFade.classList.add('fade-in');
+  setTimeout(() => {
+    DOM.dialogueBox.classList.remove('open');
+    [DOM.spriteLeft, DOM.spriteCenter, DOM.spriteRight].forEach(s => {
+      s.classList.remove('visible', 'idle-anim', 'talking');
+      s.style.transition = 'opacity 0.3s ease';
+      s.style.opacity = '0';
+    });
+    DOM.spriteManger.classList.remove('visible');
+    DOM.spriteDove.style.opacity = '0';
+
+    state.stage++;
+    loadStage(state.stage);
+
+    setTimeout(() => DOM.transitionFade.classList.remove('fade-in'), 200);
+  }, 500);
+}
+
+/* ============================================================
+   SECTION M: SCORE DISPLAY HELPERS
+   ============================================================ */
+function updateScoreDisplay(bump = false) {
+  DOM.scoreVal.textContent = state.score;
+  if (bump) {
+    DOM.scoreVal.classList.remove('bump');
+    void DOM.scoreVal.offsetHeight;
+    DOM.scoreVal.classList.add('bump');
+    setTimeout(() => DOM.scoreVal.classList.remove('bump'), 300);
+  }
+}
+
+/* ============================================================
+   SECTION N: START & END SCREENS
+   ============================================================ */
+function startGame() {
+  state.gameStarted = true;
+  DOM.titleScreen.classList.add('hidden');
+  startMusic();
+  loadStage(0);
+}
+
+function showEndScreen() {
+  DOM.dialogueBox.classList.remove('open');
+  DOM.transitionFade.classList.add('fade-in');
+
+  // Calculate max possible score
+  const maxPts = STAGES.reduce((sum, s) => sum + s.questions.length * POINTS_TABLE[0], 0);
+
+  setTimeout(() => {
+    DOM.endScreen.classList.add('visible');
+    DOM.endScoreDisplay.textContent = `${state.score} / ${maxPts}`;
+
+    const pct = state.score / maxPts;
+    let msg;
+    if (pct >= 0.95)     msg = '"Well done, good and faithful servant!" Your knowledge of Jesus\' life is outstanding. Every answer on the first attempt!';
+    else if (pct >= 0.8) msg = 'Excellent work! You have a strong understanding of the key events in Jesus\' life. Keep exploring the Gospels.';
+    else if (pct >= 0.6) msg = 'Good effort! Review the stages where you needed extra attempts. The Gospels have much wisdom to offer on each re-reading.';
+    else                 msg = 'Keep journeying! Every time we read about Jesus\' life, we discover something new. Try again and go deeper into the story.';
+
+    DOM.endMessage.textContent = msg;
+    DOM.transitionFade.classList.remove('fade-in');
+  }, 600);
+}
+
+function restartGame() {
+  if (state.typeTimer) clearInterval(state.typeTimer);
+
+  state = {
+    stage: 0, dialogueIdx: 0, questionIdx: 0, attempts: 0,
+    score: 0, typing: false, typeTimer: null,
+    questionOpen: false, answeredCorrectly: false, gameStarted: false,
+  };
+
+  DOM.endScreen.classList.remove('visible');
+  DOM.questionOverlay.classList.remove('open');
+  DOM.dialogueBox.classList.remove('open');
+  DOM.feedbackText.textContent = '';
+  DOM.feedbackText.className   = '';
+  DOM.btnNextStage.classList.remove('visible');
+  DOM.titleBanner.classList.remove('visible');
+  DOM.transitionFade.classList.remove('fade-in');
+  DOM.bg.className = '';
+  DOM.bg.style.background = '';
+  [DOM.spriteLeft, DOM.spriteCenter, DOM.spriteRight].forEach(hideSprite);
+  DOM.spriteManger.classList.remove('visible');
+  DOM.spriteDove.style.opacity = '0';
+  DOM.progressFill.style.width = '0%';
+  updateScoreDisplay();
+
+  // Stop all music
+  stopAllMusic();
+
+  DOM.titleScreen.classList.remove('hidden');
+}
+
+/* ============================================================
+   SECTION O: DUAL-TRACK MUSIC SYSTEM
+   song.mp3  → stages 1–6 and 8–10
+   song2.mp3 → stage 7 only (Temptation in the Desert)
+   Crossfades when the threshold is crossed in either direction.
+   ============================================================ */
+const music1 = document.getElementById('bg-music-1');
+const music2 = document.getElementById('bg-music-2');
+const TARGET_VOL   = 0.45;
+let currentTrack   = null; // reference to whichever <audio> is active
+let musicStarted   = false;
+let musicMuted     = false;
+
+function fadeIn(audioEl, targetVol, onDone) {
+  audioEl.volume = 0;
+  audioEl.muted  = musicMuted;
+  audioEl.play().catch(() => {}); // silently handle autoplay block
+  let v = 0;
+  const t = setInterval(() => {
+    v = Math.min(targetVol, v + 0.025);
+    audioEl.volume = v;
+    if (v >= targetVol) { clearInterval(t); if (onDone) onDone(); }
+  }, 80);
+}
+
+function fadeOut(audioEl, onDone) {
+  let v = audioEl.volume;
+  const t = setInterval(() => {
+    v = Math.max(0, v - 0.04);
+    audioEl.volume = v;
+    if (v <= 0) {
+      clearInterval(t);
+      audioEl.pause();
+      audioEl.currentTime = 0;
+      if (onDone) onDone();
+    }
+  }, 80);
+}
+
+function stopAllMusic() {
+  [music1, music2].forEach(m => { m.pause(); m.currentTime = 0; m.volume = 0; });
+  currentTrack = null;
+  musicStarted = false;
+}
+
+/* Called on every stage load to switch tracks if needed */
+function updateMusicForStage(stageIdx) {
+  if (!musicStarted) return; // music hasn't started yet (pre-game)
+
+  const stageId   = STAGES[stageIdx].id;
+  // song2.mp3 plays only for stage 7; everything else uses song.mp3
+  const wantTrack = stageId === 7 ? music2 : music1;
+
+  if (currentTrack === wantTrack) return; // already playing the right track
+
+  if (currentTrack && !currentTrack.paused) {
+    // Crossfade: fade out old, then fade in new
+    fadeOut(currentTrack, () => {
+      currentTrack = wantTrack;
+      fadeIn(wantTrack, TARGET_VOL, null);
+    });
+  } else {
+    // Nothing playing yet — just start the new track
+    currentTrack = wantTrack;
+    fadeIn(wantTrack, TARGET_VOL, null);
+  }
+}
+
+/* startMusic() — called when player clicks "Begin the Journey" */
+function startMusic() {
+  if (musicStarted) return;
+  musicStarted = true;
+  currentTrack = music1; // always start with song.mp3 (stages 1–4)
+  fadeIn(music1, TARGET_VOL, null);
+}
+
+function toggleMute() {
+  musicMuted = !musicMuted;
+  music1.muted = musicMuted;
+  music2.muted = musicMuted;
+  const btn = document.getElementById('audio-btn');
+  btn.innerHTML  = musicMuted
+    ? '<span style="text-decoration:line-through;font-size:12px;">♪</span>'
+    : '♪';
+  btn.classList.toggle('muted', musicMuted);
+  btn.title = musicMuted ? 'Unmute music' : 'Mute music';
+  // If unmuted and music not yet started, try to start
+  if (!musicMuted && !musicStarted && state.gameStarted) startMusic();
+}
+
+/* ============================================================
+   SECTION P: INIT
+   ============================================================ */
+scaleGame();
+</script>
+</body>
+</html>
