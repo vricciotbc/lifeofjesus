@@ -412,6 +412,31 @@ body {
   border-color: rgba(232,201,106,0.12);
 }
 
+/* Language toggle button */
+#lang-btn {
+  height: 26px;
+  padding: 0 8px;
+  background: rgba(12, 6, 1, 0.6);
+  border: 1px solid rgba(232,201,106,0.25);
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-head);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--gold);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+#lang-btn:hover {
+  background: rgba(232,201,106,0.12);
+  border-color: rgba(232,201,106,0.6);
+}
+
 /* ============================================================
    SECTION 6: STAGE TITLE BANNER (inside scene-area)
    ============================================================ */
@@ -957,6 +982,27 @@ body {
   box-shadow: 0 6px 24px rgba(232,201,106,0.3);
 }
 
+/* Title screen language toggle */
+#title-lang-btn {
+  margin-top: 16px;
+  font-family: var(--font-head);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(232,201,106,0.55);
+  background: transparent;
+  border: 1px solid rgba(232,201,106,0.2);
+  padding: 7px 20px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.25s ease;
+}
+#title-lang-btn:hover {
+  color: var(--gold);
+  border-color: rgba(232,201,106,0.55);
+  background: rgba(232,201,106,0.07);
+}
+
 </style>
 </head>
 <body>
@@ -1018,6 +1064,7 @@ body {
         <span id="panel-score-value">0</span>
       </div>
       <button id="btn-hud-restart" onclick="restartGame()">↺ Restart</button>
+      <button id="lang-btn" onclick="toggleLanguage()" title="Switch language / Changer de langue">FR</button>
       <button id="audio-btn" onclick="toggleMute()" title="Toggle music">♪</button>
     </div>
 
@@ -1072,6 +1119,7 @@ body {
     <div id="title-divider"></div>
     <div id="title-desc">Follow the life of Jesus through 10 key events — from the Annunciation to the Healing Ministry. Read carefully, answer questions correctly, and earn the highest score you can.</div>
     <button id="btn-start-game" onclick="startGame()">Begin the Journey</button>
+    <button id="title-lang-btn" onclick="toggleLanguage()" title="Switch language / Changer de langue">🌐 Français</button>
   </div>
 
   <!-- End Screen -->
@@ -1147,8 +1195,8 @@ const STAGES = [
     questions: [
       {
         prompt: 'What was the name of the angel who appeared to Mary at the Annunciation?',
-        options: ['Angel Michael', 'Angel Gabriel', 'Angel Raphael', 'Angel Uriel'],
-        correct: 1,
+        options: ['Angel Gabriel', 'Angel Michael', 'Angel Raphael', 'Angel Uriel'],
+        correct: 0,
         explanation: 'Correct! The Angel Gabriel was sent by God to announce to Mary that she would conceive and bear the Son of God. (Luke 1:26–38)',
       },
       {
@@ -1200,10 +1248,10 @@ const STAGES = [
         options: [
           'The Three Wise Men from the East',
           'The High Priest of the Temple',
-          'Shepherds watching their flocks in nearby fields',
           'Soldiers from Herod\'s palace',
+          'Shepherds watching their flocks in nearby fields',
         ],
-        correct: 2,
+        correct: 3,
         explanation: 'Correct! Shepherds — ordinary working people — were the very first to hear the angelic announcement and to visit the newborn Jesus. This shows that God\'s good news is for everyone. (Luke 2:8–16)',
       },
     ],
@@ -1242,12 +1290,12 @@ const STAGES = [
       {
         prompt: 'What did Simeon\'s canticle (prayer) express when he held the baby Jesus?',
         options: [
+          'Peace and fulfilment — that he had seen God\'s salvation and could now die in peace',
           'Fear that Herod would find out about the child',
           'Disappointment that the Messiah was only a baby',
-          'Peace and fulfilment — that he had seen God\'s salvation and could now die in peace',
           'A request for wealth and long life as a reward',
         ],
-        correct: 2,
+        correct: 0,
         explanation: 'Correct! Simeon\'s canticle — the "Nunc Dimittis" — expresses complete peace and fulfilment. Having seen the Messiah, he was ready to depart this life in joy and gratitude. (Luke 2:29–32)',
       },
     ],
@@ -1275,12 +1323,12 @@ const STAGES = [
       {
         prompt: 'How did Joseph receive the warning to flee to Egypt with his family?',
         options: [
+          'An angel appeared to him in a dream',
           'A star appeared in the sky pointing south',
           'Mary had a vision while praying',
-          'An angel appeared to him in a dream',
           'The Magi sent him a letter',
         ],
-        correct: 2,
+        correct: 0,
         explanation: 'Correct! An angel of the Lord appeared to Joseph in a dream and warned him to flee to Egypt to protect the infant Jesus from Herod\'s soldiers. (Matthew 2:13)',
       },
       {
@@ -1319,8 +1367,8 @@ const STAGES = [
     questions: [
       {
         prompt: 'How many days did it take Mary and Joseph to find the young Jesus after losing him at Passover?',
-        options: ['One day', 'Two days', 'Three days', 'One week'],
-        correct: 2,
+        options: ['One day', 'Two days', 'One week', 'Three days'],
+        correct: 3,
         explanation: 'Correct! It took three days to find Jesus — he was in the Temple courts, astonishing the teachers with his wisdom. (Luke 2:46)',
       },
       {
@@ -1383,12 +1431,12 @@ const STAGES = [
       {
         prompt: 'What did the voice from heaven declare at Jesus\' baptism?',
         options: [
+          '"This is my Son, whom I love; with him I am well pleased."',
           '"This is my prophet, listen to him carefully."',
           '"Rise and go — your ministry is beginning."',
-          '"This is my Son, whom I love; with him I am well pleased."',
           '"Behold the Lamb of God who takes away the sin of the world."',
         ],
-        correct: 2,
+        correct: 0,
         explanation: 'Correct! God the Father\'s voice proclaimed "This is my Son, whom I love; with him I am well pleased." This is a direct revelation of the Trinity — Father, Son, and Holy Spirit present together. (Matthew 3:17)',
       },
     ],
@@ -1475,11 +1523,11 @@ const STAGES = [
         prompt: 'What were Simon Peter and Andrew doing when Jesus called them to follow him?',
         options: [
           'Praying in the synagogue',
-          'Fishing — casting a net into the Sea of Galilee',
           'Selling goods in the marketplace',
           'Walking on the road to Jerusalem',
+          'Fishing — casting a net into the Sea of Galilee',
         ],
-        correct: 1,
+        correct: 3,
         explanation: 'Correct! Simon (Peter) and Andrew were fishermen casting their net when Jesus said "Come, follow me — I will make you fishers of people." They left everything immediately. (Matthew 4:18–20)',
       },
       {
@@ -1525,12 +1573,12 @@ const STAGES = [
       {
         prompt: 'In the Parable of the Sower, what do the seeds represent?',
         options: [
-          'The faith of the apostles',
           'The Word of God',
+          'The faith of the apostles',
           'Wealth and material possessions',
           'The people of Israel',
         ],
-        correct: 1,
+        correct: 0,
         explanation: 'Correct! Jesus explains that the seed is the Word of God. The different soils represent how different people receive God\'s word — some reject it, some accept it briefly, but those on "good soil" hear, understand, and bear lasting fruit. (Matthew 13:18–23)',
       },
     ],
@@ -1562,10 +1610,10 @@ const STAGES = [
         options: [
           'He healed him from far away without approaching',
           'He prayed for three days before healing him',
-          'He reached out and physically touched the man',
           'He told the man to wash in the River Jordan',
+          'He reached out and physically touched the man',
         ],
-        correct: 2,
+        correct: 3,
         explanation: 'Correct! Jesus touched the leper — an act of profound compassion, since lepers were considered ritually "unclean" and untouchable by Jewish law. Jesus showed that love is stronger than any social barrier. (Matthew 8:2–3)',
       },
       {
@@ -1583,6 +1631,510 @@ const STAGES = [
   },
 
 ]; // end STAGES
+
+/* ============================================================
+   SECTION B2: LANGUAGE SYSTEM
+   currentLang toggles between 'en' and 'fr'.
+   TRANSLATIONS holds all UI strings.
+   STAGES_FR holds all French stage content (titles, roles,
+   dialogue, questions). Game logic remains unchanged.
+   ============================================================ */
+let currentLang = 'en';
+
+const TRANSLATIONS = {
+  en: {
+    roleLabel:      'Playing As',
+    scoreLabel:     'Score',
+    stageCounter:   (n, tot) => `Stage ${n} of ${tot}`,
+    stageLabel:     (n)      => `Stage ${n}`,
+    restartBtn:     '↺ Restart',
+    dialogueHint:   'Click or press Space to continue',
+    continueBtn:    'Continue →',
+    knowledgeCheck: '✦ Knowledge Check ✦',
+    questionLabel:  (n, tot) => `✦ Question ${n} of ${tot} ✦`,
+    firstCorrect:   (pts)    => `First correct: ${pts} pts`,
+    nextCorrect:    (pts)    => `Next correct: ${pts} pts`,
+    wrongFeedback:  (pts)    => `Not quite — reflect on the story and try again. Next correct answer: ${pts} pts`,
+    nextQuestion:   'Next Question →',
+    nextStage:      'Next Stage →',
+    completeJourney:'Complete Journey →',
+    titleCourse:    'HRE2O · Grade 10 Catholic Religion',
+    titleSub:       'An Educational Journey Through the Gospels',
+    titleDesc:      'Follow the life of Jesus through 10 key events — from the Annunciation to the Healing Ministry. Read carefully, answer questions correctly, and earn the highest score you can.',
+    beginJourney:   'Begin the Journey',
+    endTitle:       'Journey Complete',
+    endSubtitle:    'You have walked in the footsteps of faith',
+    endScoreLabel:  'Points Earned',
+    beginAgain:     '↺ Begin Again',
+    langToggle:     'FR',
+    endMsg: {
+      great: '"Well done, good and faithful servant!" Your knowledge of Jesus\' life is outstanding. Every answer on the first attempt!',
+      good:  'Excellent work! You have a strong understanding of the key events in Jesus\' life. Keep exploring the Gospels.',
+      ok:    'Good effort! Review the stages where you needed extra attempts. The Gospels have much wisdom to offer on each re-reading.',
+      low:   'Keep journeying! Every time we read about Jesus\' life, we discover something new. Try again and go deeper into the story.',
+    },
+  },
+  fr: {
+    roleLabel:      'Vous jouez',
+    scoreLabel:     'Score',
+    stageCounter:   (n, tot) => `Étape ${n} sur ${tot}`,
+    stageLabel:     (n)      => `Étape ${n}`,
+    restartBtn:     '↺ Recommencer',
+    dialogueHint:   'Cliquez ou appuyez sur Espace pour continuer',
+    continueBtn:    'Continuer →',
+    knowledgeCheck: '✦ Vérification des connaissances ✦',
+    questionLabel:  (n, tot) => `✦ Question ${n} sur ${tot} ✦`,
+    firstCorrect:   (pts)    => `Première bonne réponse : ${pts} pts`,
+    nextCorrect:    (pts)    => `Prochaine bonne réponse : ${pts} pts`,
+    wrongFeedback:  (pts)    => `Pas tout à fait — réfléchissez à l'histoire et réessayez. Prochaine bonne réponse : ${pts} pts`,
+    nextQuestion:   'Question suivante →',
+    nextStage:      'Étape suivante →',
+    completeJourney:'Terminer le voyage →',
+    titleCourse:    'HRE2O · Religion catholique — 10e année',
+    titleSub:       'Un voyage éducatif à travers les Évangiles',
+    titleDesc:      'Suivez la vie de Jésus à travers 10 événements clés — de l\'Annonciation au Ministère de guérison. Lisez attentivement, répondez correctement aux questions et obtenez le meilleur score possible.',
+    beginJourney:   'Commencer le voyage',
+    endTitle:       'Voyage terminé',
+    endSubtitle:    'Vous avez marché sur les traces de la foi',
+    endScoreLabel:  'Points obtenus',
+    beginAgain:     '↺ Recommencer',
+    langToggle:     'EN',
+    endMsg: {
+      great: '« Bien, bon et fidèle serviteur ! » Votre connaissance de la vie de Jésus est remarquable. Chaque bonne réponse du premier coup !',
+      good:  'Excellent travail ! Vous avez une solide compréhension des événements clés de la vie de Jésus. Continuez à explorer les Évangiles.',
+      ok:    'Bon effort ! Relisez les étapes où vous avez eu besoin de plusieurs tentatives. Les Évangiles offrent sagesse et profondeur à chaque lecture.',
+      low:   'Continuez votre chemin ! Chaque fois que nous lisons la vie de Jésus, nous découvrons quelque chose de nouveau. Réessayez et allez plus en profondeur.',
+    },
+  },
+};
+
+/* Shorthand helper — returns current language strings */
+function T() { return TRANSLATIONS[currentLang]; }
+
+/* Returns the stage array for the current language */
+function getLangStages() { return currentLang === 'en' ? STAGES : STAGES_FR; }
+
+/* ── French Stage Data ─────────────────────────────────── */
+const STAGES_FR = [
+
+  /* ── STAGE 1: L'ANNONCIATION ───────────────────────────── */
+  {
+    id: 1, title: "L'Annonciation",
+    bgClass: 'bg-annunciation',
+    role: 'Marie',
+    showManger: false, showDove: false,
+    characters: { left: { src: SPRITES.mary, pos: '22%' }, right: { src: SPRITES.gabriel, pos: '68%' }, center: null },
+    dialogue: [
+      { speaker: 'Narrateur',    portrait: SPRITES.mary,    text: "Dans la ville de Nazareth, une jeune femme nommée Marie menait une vie simple et pieuse. Un soir, tout changea." },
+      { speaker: 'Ange Gabriel', portrait: SPRITES.gabriel, text: "« Je vous salue, Marie, pleine de grâce ! Le Seigneur est avec vous. Ne craignez pas — vous avez trouvé grâce auprès de Dieu. »" },
+      { speaker: 'Ange Gabriel', portrait: SPRITES.gabriel, text: "« Vous concevrez et enfanterez un fils, et vous lui donnerez le nom de Jésus. Il sera grand et sera appelé Fils du Très-Haut. »" },
+      { speaker: 'Marie',        portrait: SPRITES.mary,    text: "« Comment cela se fera-t-il, puisque je ne connais pas d'homme ? » demanda Marie avec émerveillement et confiance en son cœur." },
+      { speaker: 'Ange Gabriel', portrait: SPRITES.gabriel, text: "« Le Saint-Esprit viendra sur vous et la puissance du Très-Haut vous couvrira de son ombre. Rien n'est impossible à Dieu. »" },
+      { speaker: 'Marie',        portrait: SPRITES.mary,    text: "« Je suis la servante du Seigneur. Qu'il me soit fait selon votre parole. » Par ces mots, Marie accepta totalement le plan de Dieu." },
+    ],
+    questions: [
+      {
+        prompt: "Quel était le nom de l'ange qui apparut à Marie lors de l'Annonciation ?",
+        options: ['Ange Gabriel', 'Ange Michel', 'Ange Raphaël', 'Ange Uriel'],
+        correct: 0,
+        explanation: "Correct ! L'ange Gabriel fut envoyé par Dieu pour annoncer à Marie qu'elle concevrait et enfanterait le Fils de Dieu. (Luc 1,26–38)",
+      },
+      {
+        prompt: "Par quelles paroles Marie accepta-t-elle le plan de Dieu pour elle ?",
+        options: [
+          "« Je prierai et y réfléchirai soigneusement. »",
+          "« Qu'il soit fait si c'est vraiment la volonté de Dieu. »",
+          "« Je suis la servante du Seigneur. Qu'il me soit fait selon votre parole. »",
+          "« Je ne suis pas digne de cet honneur. »",
+        ],
+        correct: 2,
+        explanation: "Correct ! Le « fiat » de Marie — « Qu'il me soit fait selon votre parole » — est l'un des actes de foi les plus importants de l'Écriture. Son obéissance totale rendit l'Incarnation possible. (Luc 1,38)",
+      },
+    ],
+  },
+
+  /* ── STAGE 2: LA NAISSANCE DE JÉSUS ───────────────────── */
+  {
+    id: 2, title: 'La Naissance de Jésus',
+    bgClass: 'bg-birth',
+    role: 'Joseph',
+    showManger: true, showDove: false,
+    characters: { left: { src: SPRITES.maryBaby, pos: '20%' }, right: { src: SPRITES.shepherd, pos: '72%' }, center: { src: SPRITES.joseph, pos: '48%' } },
+    dialogue: [
+      { speaker: 'Narrateur', portrait: SPRITES.joseph,   text: "L'empereur Auguste ordonna un recensement de tout le monde. Joseph et Marie se rendirent à Bethléem — la ville de David — pour s'y faire inscrire." },
+      { speaker: 'Narrateur', portrait: SPRITES.joseph,   text: "Il n'y avait pas de place à l'auberge. Dans une humble étable, entourée d'animaux, Marie donna naissance à Jésus, l'emmaillota et le coucha dans une mangeoire." },
+      { speaker: 'Narrateur', portrait: SPRITES.shepherd, text: "Cette nuit-là, un ange apparut à des bergers qui veillaient dans les champs alentour, les remplissant d'une sainte crainte." },
+      { speaker: 'Narrateur', portrait: SPRITES.shepherd, text: "« Ne craignez pas. Je vous annonce une bonne nouvelle, une grande joie pour tout le peuple. Aujourd'hui, dans la ville de David, il vous est né un Sauveur, qui est le Christ Seigneur. »" },
+      { speaker: 'Narrateur', portrait: SPRITES.shepherd, text: "Les bergers se hâtèrent vers Bethléem et trouvèrent Marie, Joseph et l'enfant couché dans la mangeoire — exactement comme l'ange le leur avait dit." },
+    ],
+    questions: [
+      {
+        prompt: "Pourquoi n'y avait-il pas de place pour Marie et Joseph dans une auberge de Bethléem ?",
+        options: [
+          "Ils arrivèrent trop tard le soir",
+          "L'empereur Auguste avait réservé toutes les chambres",
+          "La ville était bondée en raison du recensement",
+          "Joseph avait oublié de faire une réservation",
+        ],
+        correct: 2,
+        explanation: "Correct ! Bethléem était surpeuplée car des gens de partout venaient s'inscrire pour le recensement ordonné par l'empereur Auguste. (Luc 2,1–7)",
+      },
+      {
+        prompt: "Qui furent les premiers à apprendre la naissance de Jésus et à lui rendre visite à Bethléem ?",
+        options: [
+          "Les trois Rois Mages venus d'Orient",
+          "Le grand prêtre du Temple",
+          "Des soldats du palais d'Hérode",
+          "Des bergers qui gardaient leurs troupeaux dans les champs voisins",
+        ],
+        correct: 3,
+        explanation: "Correct ! Des bergers — de simples travailleurs — furent les tout premiers à entendre l'annonce des anges et à rendre visite au nouveau-né Jésus. Cela montre que la bonne nouvelle de Dieu est pour tous. (Luc 2,8–16)",
+      },
+    ],
+  },
+
+  /* ── STAGE 3: LA PRÉSENTATION AU TEMPLE ───────────────── */
+  {
+    id: 3, title: 'La Présentation au Temple',
+    bgClass: 'bg-temple',
+    role: 'Marie',
+    showManger: false, showDove: false,
+    characters: { left: { src: SPRITES.maryBaby, pos: '20%' }, right: { src: SPRITES.anna, pos: '72%' }, center: { src: SPRITES.simeon, pos: '50%' } },
+    dialogue: [
+      { speaker: 'Narrateur', portrait: SPRITES.maryBaby, text: "Selon la Loi de Moïse, tout premier-né devait être consacré au Seigneur. Joseph et Marie apportèrent l'enfant Jésus au Temple de Jérusalem." },
+      { speaker: 'Narrateur', portrait: SPRITES.simeon,   text: "Il y avait un homme nommé Siméon, juste et pieux, qui avait attendu toute sa vie le Messie. Le Saint-Esprit lui avait révélé qu'il ne mourrait pas avant d'avoir vu le Christ du Seigneur." },
+      { speaker: 'Siméon',    portrait: SPRITES.simeon,   text: "« Seigneur, maintenant tu peux laisser ton serviteur s'en aller en paix, selon ta parole. Car mes yeux ont vu ton salut, que tu as préparé à la face de tous les peuples. »" },
+      { speaker: 'Anne',      portrait: SPRITES.anna,     text: "La prophétesse Anne, âgée de 84 ans et dévouée à Dieu toute sa vie, s'avança et rendit grâce à Dieu — parlant de l'enfant à tous ceux qui attendaient la délivrance de Jérusalem." },
+      { speaker: 'Narrateur', portrait: SPRITES.maryBaby, text: "Siméon les bénit et avertit Marie : « Et toi-même, une épée te transpercera l'âme. » Ces paroles annonçaient la souffrance qui viendrait lorsqu'elle verrait s'accomplir la mission de son fils." },
+    ],
+    questions: [
+      {
+        prompt: "Qu'est-ce que le Saint-Esprit avait révélé à Siméon avant qu'il voie l'enfant Jésus ?",
+        options: [
+          "Qu'il vivrait jusqu'à 100 ans",
+          "Qu'il ne mourrait pas avant de voir le Messie",
+          "Qu'il deviendrait grand prêtre",
+          "Qu'il voyagerait en Égypte",
+        ],
+        correct: 1,
+        explanation: "Correct ! Le Saint-Esprit avait révélé à Siméon qu'il ne mourrait pas avant de voir le Christ du Seigneur. Lorsqu'il tint l'enfant Jésus, l'espoir de toute sa vie fut accompli. (Luc 2,25–32)",
+      },
+      {
+        prompt: "Qu'exprimait le cantique (prière) de Siméon lorsqu'il tenait le bébé Jésus ?",
+        options: [
+          "La paix et l'accomplissement — il avait vu le salut de Dieu et pouvait désormais mourir en paix",
+          "La crainte qu'Hérode découvre l'enfant",
+          "La déception que le Messie ne soit qu'un bébé",
+          "Une demande de richesse et de longue vie en récompense",
+        ],
+        correct: 0,
+        explanation: "Correct ! Le cantique de Siméon — le « Nunc Dimittis » — exprime une paix et un accomplissement parfaits. Ayant vu le Messie, il était prêt à quitter cette vie dans la joie et la gratitude. (Luc 2,29–32)",
+      },
+    ],
+  },
+
+  /* ── STAGE 4: LA FUITE EN ÉGYPTE ──────────────────────── */
+  {
+    id: 4, title: 'La Fuite en Égypte',
+    bgClass: 'bg-egypt',
+    role: 'Joseph',
+    showManger: false, showDove: false,
+    characters: { left: { src: SPRITES.joseph, pos: '25%' }, right: { src: SPRITES.maryBaby, pos: '65%' }, center: null },
+    dialogue: [
+      { speaker: 'Narrateur',       portrait: SPRITES.joseph,  text: "Après la visite des Mages à Bethléem, le roi Hérode réalisa qu'il avait été trompé. Furieux, il ordonna le massacre de tous les garçons de moins de deux ans à Bethléem." },
+      { speaker: 'Narrateur',       portrait: SPRITES.gabriel, text: "Mais un ange du Seigneur apparut à Joseph en songe avec un avertissement urgent." },
+      { speaker: 'Ange (en songe)', portrait: SPRITES.gabriel, text: "« Lève-toi ! Prends l'enfant et sa mère, fuis en Égypte et restes-y jusqu'à ce que je te le dise, car Hérode cherche l'enfant pour le faire mourir. »" },
+      { speaker: 'Narrateur',       portrait: SPRITES.joseph,  text: "Joseph se leva pendant la nuit, prit Marie et Jésus, et ils entamèrent le long voyage vers l'Égypte — accomplissant l'ancienne prophétie : « D'Égypte j'ai appelé mon fils. »" },
+      { speaker: 'Narrateur',       portrait: SPRITES.joseph,  text: "Après la mort d'Hérode, l'ange apparut à nouveau à Joseph : « Lève-toi, prends l'enfant et sa mère et retourne au pays d'Israël. » La Sainte Famille rentra à Nazareth." },
+    ],
+    questions: [
+      {
+        prompt: "Comment Joseph reçut-il l'avertissement de fuir en Égypte avec sa famille ?",
+        options: [
+          "Un ange lui apparut en songe",
+          "Une étoile apparut dans le ciel en direction du sud",
+          "Marie eut une vision pendant sa prière",
+          "Les Mages lui envoyèrent une lettre",
+        ],
+        correct: 0,
+        explanation: "Correct ! Un ange du Seigneur apparut à Joseph en songe et l'avertit de fuir en Égypte pour protéger l'enfant Jésus des soldats d'Hérode. (Matthieu 2,13)",
+      },
+      {
+        prompt: "Quelle prophétie de l'Ancien Testament fut accomplie lors du retour de la Sainte Famille d'Égypte ?",
+        options: [
+          "« Une vierge concevra et enfantera un fils »",
+          "« D'Égypte j'ai appelé mon fils »",
+          "« Il naîtra dans la ville de David »",
+          "« Son nom sera appelé Conseiller admirable »",
+        ],
+        correct: 1,
+        explanation: "Correct ! Le prophète Osée avait écrit : « D'Égypte j'ai appelé mon fils. » L'Évangile de Matthieu souligne l'accomplissement de cette prophétie lors du retour de Jésus d'Égypte. (Matthieu 2,15 ; Osée 11,1)",
+      },
+    ],
+  },
+
+  /* ── STAGE 5: JÉSUS RETROUVÉ AU TEMPLE ────────────────── */
+  {
+    id: 5, title: 'Jésus retrouvé au Temple',
+    bgClass: 'bg-templefinding',
+    role: 'Jésus enfant',
+    showManger: false, showDove: false,
+    characters: { left: { src: SPRITES.joseph, pos: '18%' }, center: { src: SPRITES.youngJesus, pos: '50%' }, right: { src: SPRITES.mary, pos: '76%' } },
+    dialogue: [
+      { speaker: 'Narrateur',    portrait: SPRITES.youngJesus, text: "Chaque année, la famille de Jésus se rendait à Jérusalem pour la fête de la Pâque. Lorsque Jésus eut douze ans, ils firent le voyage comme d'habitude." },
+      { speaker: 'Narrateur',    portrait: SPRITES.youngJesus, text: "Sur le chemin du retour, Marie et Joseph supposèrent que Jésus se trouvait avec d'autres dans leur groupe. Après une journée entière de voyage, ils le cherchèrent — sans le trouver. Ils retournèrent en hâte à Jérusalem, affolés." },
+      { speaker: 'Narrateur',    portrait: SPRITES.youngJesus, text: "Après trois jours de recherches, ils le trouvèrent dans le parvis du Temple — assis au milieu des docteurs, les écoutant et les interrogeant. Tous étaient stupéfaits de son intelligence." },
+      { speaker: 'Marie',        portrait: SPRITES.mary,       text: "« Mon enfant, pourquoi as-tu agi de la sorte avec nous ? Vois comme ton père et moi, nous te cherchions avec angoisse ! »" },
+      { speaker: 'Jésus enfant', portrait: SPRITES.youngJesus, text: "« Pourquoi me cherchiez-vous ? Ne saviez-vous pas qu'il me faut être dans la maison de mon Père ? »" },
+      { speaker: 'Narrateur',    portrait: SPRITES.youngJesus, text: "Ils ne comprirent pas pleinement ce qu'il voulait dire. Mais Jésus redescendit avec eux à Nazareth et leur était soumis. Il grandissait en sagesse, en taille et en grâce devant Dieu et devant les hommes." },
+    ],
+    questions: [
+      {
+        prompt: "Combien de jours fallut-il à Marie et Joseph pour retrouver le jeune Jésus après l'avoir perdu à la Pâque ?",
+        options: ['Un jour', 'Deux jours', 'Une semaine', 'Trois jours'],
+        correct: 3,
+        explanation: "Correct ! Il fallut trois jours pour retrouver Jésus — il était dans le Temple, émerveillant les docteurs par sa sagesse. (Luc 2,46)",
+      },
+      {
+        prompt: "Que voulait dire Jésus en disant qu'il devait être « dans la maison de son Père » ?",
+        options: [
+          "Il parlait de l'atelier de charpenterie de Joseph à Nazareth",
+          "Il révélait son identité divine — le Temple était la maison de son Père céleste",
+          "Il voulait dire qu'il devait rester chez les prêtres en apprentissage",
+          "Il faisait référence à la maison d'un parent à Jérusalem",
+        ],
+        correct: 1,
+        explanation: "Correct ! En appelant le Temple « la maison de mon Père », Jésus, âgé de douze ans, révélait son identité divine unique. Dieu était son Père d'une manière qui dépassait même Joseph. (Luc 2,49)",
+      },
+    ],
+  },
+
+  /* ── STAGE 6: LE BAPTÊME DE JÉSUS ─────────────────────── */
+  {
+    id: 6, title: 'Le Baptême de Jésus',
+    bgClass: 'bg-baptism',
+    role: 'Jésus',
+    showManger: false, showDove: true,
+    characters: { left: { src: SPRITES.jesus, pos: '28%' }, right: { src: SPRITES.john, pos: '66%' }, center: null },
+    dialogue: [
+      { speaker: 'Narrateur',        portrait: SPRITES.john,  text: "Jean le Baptiste prêchait dans le désert : « Repentez-vous, car le royaume des cieux est proche ! » Des gens venaient de Jérusalem et de toute la Judée pour être baptisés dans le Jourdain." },
+      { speaker: 'Jean le Baptiste', portrait: SPRITES.john,  text: "« Je vous baptise avec de l'eau pour la repentance. Mais celui qui vient après moi est plus puissant que moi, et je ne suis pas digne de lui retirer ses sandales. »" },
+      { speaker: 'Narrateur',        portrait: SPRITES.jesus, text: "Puis Jésus vint de Galilée au Jourdain pour être baptisé par Jean. Jean essaya de l'en dissuader." },
+      { speaker: 'Jean le Baptiste', portrait: SPRITES.john,  text: "« C'est moi qui ai besoin d'être baptisé par toi, et c'est toi qui viens à moi ? »" },
+      { speaker: 'Jésus',            portrait: SPRITES.jesus, text: "« Laisse faire maintenant, car c'est ainsi que nous devons accomplir toute justice. » Et Jean accepta." },
+      { speaker: 'Narrateur',        portrait: SPRITES.dove,  text: "Dès que Jésus fut baptisé et sortit de l'eau, les cieux s'ouvrirent. Il vit l'Esprit de Dieu descendre comme une colombe et venir sur lui." },
+      { speaker: 'Voix du Père',     portrait: SPRITES.dove,  text: "« Celui-ci est mon Fils bien-aimé, en qui j'ai mis toute mon affection. » — La voix de Dieu le Père retentit du ciel, révélant les trois Personnes de la Trinité." },
+    ],
+    questions: [
+      {
+        prompt: "Quels furent les TROIS signes qui se produisirent lors du baptême de Jésus ? (Choisissez la réponse la plus complète)",
+        options: [
+          "Le Jourdain s'arrêta de couler, le ciel s'assombrit et le tonnerre gronda",
+          "Les cieux s'ouvrirent, l'Esprit descendit comme une colombe et une voix du ciel parla",
+          "Une étoile brillante apparut, des anges chantèrent et Jean tomba à terre",
+          "L'eau devint lumière, une colonne de feu apparut et un parchemin descendit",
+        ],
+        correct: 1,
+        explanation: "Correct ! Trois signes : les cieux s'ouvrirent (la gloire du Père), l'Esprit descendit comme une colombe (le Saint-Esprit), et une voix du ciel parla (Dieu le Père). Les trois Personnes de la Trinité furent révélées. (Matthieu 3,16–17)",
+      },
+      {
+        prompt: "Que représente la colombe qui descend sur Jésus lors de son baptême ?",
+        options: [
+          "L'âme de Jean le Baptiste quittant son corps",
+          "Un signe que le Jourdain était saint",
+          "Le Saint-Esprit — la troisième Personne de la Trinité — venant sur Jésus",
+          "Un ange envoyé comme messager du ciel",
+        ],
+        correct: 2,
+        explanation: "Correct ! La colombe est le symbole du Saint-Esprit. Lors du baptême de Jésus, le Saint-Esprit descendit de manière visible, oignant Jésus pour sa mission publique et confirmant son identité divine. (Matthieu 3,16)",
+      },
+      {
+        prompt: "Que proclama la voix du ciel lors du baptême de Jésus ?",
+        options: [
+          "« Celui-ci est mon Fils bien-aimé, en qui j'ai mis toute mon affection. »",
+          "« Voici mon prophète, écoutez-le attentivement. »",
+          "« Lève-toi et pars — ton ministère commence. »",
+          "« Voici l'Agneau de Dieu qui enlève le péché du monde. »",
+        ],
+        correct: 0,
+        explanation: "Correct ! La voix de Dieu le Père proclama : « Celui-ci est mon Fils bien-aimé, en qui j'ai mis toute mon affection. » C'est une révélation directe de la Trinité — le Père, le Fils et le Saint-Esprit présents ensemble. (Matthieu 3,17)",
+      },
+    ],
+  },
+
+  /* ── STAGE 7: LA TENTATION AU DÉSERT ──────────────────── */
+  {
+    id: 7, title: 'La Tentation au Désert',
+    bgClass: 'bg-temptation',
+    role: 'Jésus',
+    showManger: false, showDove: false,
+    characters: { left: { src: SPRITES.jesus, pos: '28%' }, right: { src: SPRITES.satan, pos: '68%' }, center: null },
+    dialogue: [
+      { speaker: 'Narrateur', portrait: SPRITES.jesus, text: "Après son baptême, Jésus fut conduit par l'Esprit dans le désert. Pendant quarante jours et quarante nuits, il jeûna, et à la fin il avait faim." },
+      { speaker: 'Satan',     portrait: SPRITES.satan, text: "Première tentation : « Si tu es le Fils de Dieu, ordonne que ces pierres deviennent des pains. » Satan attaqua Jésus à son point de faiblesse physique — la faim." },
+      { speaker: 'Jésus',     portrait: SPRITES.jesus, text: "« Il est écrit : L'homme ne vivra pas seulement de pain, mais de toute parole qui sort de la bouche de Dieu. » Jésus refusa de préférer le confort physique à la fidélité à Dieu." },
+      { speaker: 'Satan',     portrait: SPRITES.satan, text: "Deuxième tentation : Satan l'emmena au sommet du Temple. « Jette-toi en bas — les anges de Dieu te porteront sur leurs mains ! » Il tenta Jésus de mettre à l'épreuve la protection de Dieu de manière téméraire." },
+      { speaker: 'Jésus',     portrait: SPRITES.jesus, text: "« Il est aussi écrit : Tu ne mettras pas à l'épreuve le Seigneur ton Dieu. » Jésus refusa d'utiliser son pouvoir divin pour forcer la main de Dieu." },
+      { speaker: 'Satan',     portrait: SPRITES.satan, text: "Troisième tentation : Depuis une haute montagne, Satan montra à Jésus tous les royaumes du monde. « Tout cela, je te le donnerai si tu te prosternes et m'adores. »" },
+      { speaker: 'Jésus',     portrait: SPRITES.jesus, text: "« Retire-toi, Satan ! Car il est écrit : Tu adoreras le Seigneur ton Dieu et tu ne serviras que lui seul. » Le diable le quitta, et des anges vinrent le servir." },
+    ],
+    questions: [
+      {
+        prompt: "Quelle fut la PREMIÈRE tentation de Satan à Jésus dans le désert ?",
+        options: [
+          "Se jeter du sommet du Temple",
+          "Transformer des pierres en pain pour satisfaire sa faim",
+          "Se prosterner et adorer Satan en échange du pouvoir sur le monde",
+          "Faire descendre des anges pour montrer son pouvoir divin",
+        ],
+        correct: 1,
+        explanation: "Correct ! La première tentation était de transformer des pierres en pain — attaquant Jésus à sa faiblesse physique après 40 jours de jeûne. Jésus refusa, montrant sa confiance en Dieu au-delà des besoins physiques. (Matthieu 4,3–4)",
+      },
+      {
+        prompt: "Quelle fut la TROISIÈME et dernière tentation de Satan à Jésus ?",
+        options: [
+          "Transformer l'eau du Jourdain en vin",
+          "Éviter la croix et vivre une vie longue et paisible",
+          "Recevoir tous les royaumes du monde en adorant Satan",
+          "Prouver sa puissance en convoquant une armée angélique",
+        ],
+        correct: 2,
+        explanation: "Correct ! La troisième tentation offrait à Jésus le pouvoir politique sur tous les royaumes terrestres — s'il adorait Satan. Jésus refusa absolument : « Tu adoreras le Seigneur ton Dieu et tu ne serviras que lui seul. » (Matthieu 4,8–10)",
+      },
+      {
+        prompt: "Comment Jésus répondit-il à chacune des trois tentations de Satan dans le désert ?",
+        options: [
+          "Il utilisa son pouvoir miraculeux pour faire taire Satan à chaque fois",
+          "Il fit appel aux anges pour chasser Satan",
+          "Il jeûna et pria en silence jusqu'à ce que Satan parte",
+          "Il cita les Écritures — la Parole de Dieu — à chaque fois",
+        ],
+        correct: 3,
+        explanation: "Correct ! Jésus répondit à chaque tentation en citant les Écritures. Cela nous montre que la Parole de Dieu est notre défense la plus puissante contre la tentation. Jésus nous montre comment résister au mal. (Matthieu 4,4.7.10)",
+      },
+    ],
+  },
+
+  /* ── STAGE 8: LA VOCATION DES APÔTRES ─────────────────── */
+  {
+    id: 8, title: 'La Vocation des Apôtres',
+    bgClass: 'bg-apostles',
+    role: 'Jésus',
+    showManger: false, showDove: false,
+    characters: { left: { src: SPRITES.apostle1, pos: '18%' }, center: { src: SPRITES.jesus, pos: '50%' }, right: { src: SPRITES.apostle2, pos: '76%' } },
+    dialogue: [
+      { speaker: 'Narrateur', portrait: SPRITES.jesus,    text: "Alors que Jésus marchait au bord de la mer de Galilée, il vit deux frères — Simon appelé Pierre et André — qui jetaient leur filet dans le lac, car ils étaient pêcheurs." },
+      { speaker: 'Jésus',     portrait: SPRITES.jesus,    text: "« Venez à ma suite, et je vous ferai pêcheurs d'hommes. »" },
+      { speaker: 'Narrateur', portrait: SPRITES.apostle1, text: "Aussitôt, ils abandonnèrent leurs filets et le suivirent. Continuant son chemin, Jésus vit deux autres frères, Jacques et Jean, et les appela aussi. Ils quittèrent immédiatement leur barque et leur père." },
+      { speaker: 'Narrateur', portrait: SPRITES.jesus,    text: "Plus tard, Jésus vit un homme nommé Matthieu, assis au bureau des impôts. Les collecteurs d'impôts étaient méprisés — considérés comme des traîtres au service de Rome, qui surtaxaient souvent leurs propres compatriotes." },
+      { speaker: 'Jésus',     portrait: SPRITES.jesus,    text: "« Suis-moi », dit Jésus à Matthieu. Et Matthieu se leva et le suivit aussitôt — montrant que personne n'est hors de portée de l'appel de Dieu." },
+      { speaker: 'Jésus',     portrait: SPRITES.jesus,    text: "« Ce n'est pas vous qui m'avez choisi, c'est moi qui vous ai choisis et établis afin que vous alliez et que vous portiez du fruit — un fruit qui demeure. » Jésus choisit en tout douze apôtres pour diriger son Église." },
+    ],
+    questions: [
+      {
+        prompt: "Que faisaient Simon Pierre et André quand Jésus les appela à le suivre ?",
+        options: [
+          "Ils priaient dans la synagogue",
+          "Ils vendaient des marchandises sur le marché",
+          "Ils marchaient sur la route de Jérusalem",
+          "Ils pêchaient — lançant un filet dans la mer de Galilée",
+        ],
+        correct: 3,
+        explanation: "Correct ! Simon (Pierre) et André étaient des pêcheurs qui jetaient leur filet quand Jésus dit : « Venez à ma suite, je vous ferai pêcheurs d'hommes. » Ils abandonnèrent tout immédiatement. (Matthieu 4,18–20)",
+      },
+      {
+        prompt: "Pourquoi était-il choquant et surprenant que Jésus appelle Matthieu à être l'un de ses apôtres ?",
+        options: [
+          "Matthieu était déjà un rabbin respecté et docteur de la Loi",
+          "Matthieu était un soldat romain qui avait persécuté le peuple juif",
+          "Matthieu était collecteur d'impôts — considéré comme un traître et pécheur public par la société juive",
+          "Matthieu était un étranger qui ne parlait pas l'araméen",
+        ],
+        correct: 2,
+        explanation: "Correct ! Les collecteurs d'impôts étaient profondément méprisés dans la société juive. En appelant Matthieu, Jésus montra que son invitation est pour tous, y compris les exclus de la société. (Matthieu 9,9)",
+      },
+    ],
+  },
+
+  /* ── STAGE 9: LE MINISTÈRE DE L'ENSEIGNEMENT ──────────── */
+  {
+    id: 9, title: "Le Ministère de l'enseignement",
+    bgClass: 'bg-teaching',
+    role: 'Disciple',
+    showManger: false, showDove: false,
+    characters: { left: { src: SPRITES.genericMan, pos: '20%' }, center: { src: SPRITES.jesus, pos: '50%' }, right: { src: SPRITES.apostle1, pos: '76%' } },
+    dialogue: [
+      { speaker: 'Narrateur', portrait: SPRITES.jesus, text: "Jésus enseignait en paraboles — de simples histoires avec une profonde signification spirituelle. Par ces récits, il révélait la nature du Royaume de Dieu à tous ceux qui voulaient bien écouter." },
+      { speaker: 'Jésus',     portrait: SPRITES.jesus, text: "« Un semeur sortit pour semer. Une partie tomba sur le chemin — les oiseaux la mangèrent. Une partie tomba sur un sol rocheux et se dessécha. Une partie tomba dans les épines et fut étouffée. Mais une partie tomba dans la bonne terre et produisit du fruit — cent, soixante ou trente pour un. »" },
+      { speaker: 'Jésus',     portrait: SPRITES.jesus, text: "« La semence, c'est la Parole de Dieu. La bonne terre représente ceux qui entendent la parole, la comprennent, l'accueillent et produisent du fruit par une vie fidèle. »" },
+      { speaker: 'Narrateur', portrait: SPRITES.jesus, text: "Lorsqu'on lui demanda « Qui est mon prochain ? », Jésus raconta la Parabole du Bon Samaritain — une histoire qui brisa les barrières sociales et définit l'amour en acte." },
+      { speaker: 'Jésus',     portrait: SPRITES.jesus, text: "« Un homme fut attaqué par des bandits et laissé à demi mort. Un prêtre passa. Un lévite passa. Mais un Samaritain — un étranger méprisé des Juifs — le vit, fut pris de pitié et prit soin de lui à ses propres frais. »" },
+      { speaker: 'Jésus',     portrait: SPRITES.jesus, text: "« Lequel des trois fut un prochain ? » « Celui qui a pratiqué la miséricorde. » Jésus dit : « Va, et fais de même. » Le véritable amour du prochain franchit toutes les frontières sociales." },
+    ],
+    questions: [
+      {
+        prompt: "Dans la Parabole du Bon Samaritain, qui s'arrêta finalement pour aider l'homme blessé sur la route ?",
+        options: ['Un prêtre juif', 'Un lévite', 'Un soldat romain', 'Un Samaritain'],
+        correct: 3,
+        explanation: "Correct ! Un Samaritain — méprisé des Juifs à l'époque de Jésus — fut celui qui eut de la compassion, tandis que le prêtre et le lévite passèrent leur chemin. Jésus montra ainsi que l'amour du prochain ne connaît pas de frontières sociales. (Luc 10,25–37)",
+      },
+      {
+        prompt: "Dans la Parabole du Semeur, que représentent les semences ?",
+        options: [
+          "La Parole de Dieu",
+          "La foi des apôtres",
+          "La richesse et les biens matériels",
+          "Le peuple d'Israël",
+        ],
+        correct: 0,
+        explanation: "Correct ! Jésus explique que la semence est la Parole de Dieu. Les différents types de sol représentent la façon dont différentes personnes reçoivent la parole — ceux dans la « bonne terre » l'entendent, la comprennent et portent un fruit durable. (Matthieu 13,18–23)",
+      },
+    ],
+  },
+
+  /* ── STAGE 10: LE MINISTÈRE DE GUÉRISON ───────────────── */
+  {
+    id: 10, title: 'Le Ministère de guérison',
+    bgClass: 'bg-healing',
+    role: 'Disciple',
+    showManger: false, showDove: false,
+    characters: { left: { src: SPRITES.leper, pos: '20%' }, center: { src: SPRITES.jesus, pos: '50%' }, right: { src: SPRITES.apostle2, pos: '74%' } },
+    dialogue: [
+      { speaker: 'Narrateur',            portrait: SPRITES.jesus, text: "Jésus accomplit de nombreux miracles tout au long de son ministère — guérissant les malades, rendant la vue aux aveugles et ressuscitant les morts — comme signes du Royaume de Dieu qui pénètre dans le monde." },
+      { speaker: 'Narrateur',            portrait: SPRITES.leper, text: "Un jour, un homme atteint de lèpre vint se prosterner devant lui. La lèpre causait non seulement une souffrance physique, mais aussi un rejet social total — les lépreux étaient déclarés « impurs » par la loi juive." },
+      { speaker: 'Homme atteint de lèpre', portrait: SPRITES.leper, text: "« Seigneur, si tu le veux, tu peux me purifier. »" },
+      { speaker: 'Jésus',                portrait: SPRITES.jesus, text: "Jésus étendit la main et le toucha — un geste qu'aucun autre n'aurait osé faire. Ce simple acte de contact était lui-même un miracle de compassion." },
+      { speaker: 'Jésus',                portrait: SPRITES.jesus, text: "« Je le veux, sois purifié ! » Aussitôt la lèpre le quitta, et il fut guéri." },
+      { speaker: 'Narrateur',            portrait: SPRITES.jesus, text: "Jésus guérit aussi un homme paralysé que ses amis avaient descendu à travers un toit. Il dit : « Mon fils, tes péchés sont pardonnés. » Les docteurs s'opposèrent — seul Dieu peut pardonner les péchés ! Jésus dit alors : « Lève-toi et marche. » Et l'homme obéit." },
+      { speaker: 'Narrateur',            portrait: SPRITES.jesus, text: "Ces miracles révélèrent l'autorité divine de Jésus sur la maladie, le péché et la mort — il vint apporter la plénitude du corps, de l'âme et de l'esprit à tous ceux qui vinrent à lui dans la foi." },
+    ],
+    questions: [
+      {
+        prompt: "Qu'est-ce que Jésus fit qui choqua tout le monde lorsqu'il guérit le lépreux ?",
+        options: [
+          "Il le guérit de loin, sans s'approcher",
+          "Il pria pendant trois jours avant de le guérir",
+          "Il dit à l'homme d'aller se laver dans le Jourdain",
+          "Il étendit la main et toucha physiquement l'homme",
+        ],
+        correct: 3,
+        explanation: "Correct ! Jésus toucha le lépreux — un acte de profonde compassion, car les lépreux étaient considérés comme rituellement « impurs » et intouchables par la loi juive. Jésus montra que l'amour est plus fort que toute barrière sociale. (Matthieu 8,2–3)",
+      },
+      {
+        prompt: "Lorsque Jésus guérit le paralysé, que dit-il EN PREMIER — avant de lui ordonner de marcher ?",
+        options: [
+          "« Sois guéri dans ton corps et dans ton esprit. »",
+          "« Lève-toi et marche — ta foi t'a sauvé. »",
+          "« Mon fils, tes péchés sont pardonnés. »",
+          "« Crois-tu que je peux faire cela ? »",
+        ],
+        correct: 2,
+        explanation: "Correct ! Jésus dit d'abord : « Tes péchés sont pardonnés », ce qui provoqua une indignation — les docteurs savaient que seul Dieu pouvait pardonner les péchés. En disant cela, Jésus revendiquait une autorité divine. La guérison physique prouva ensuite sa puissance. (Marc 2,5–12)",
+      },
+    ],
+  },
+
+]; // end STAGES_FR
 
 /* ============================================================
    SECTION C: GAME STATE
@@ -1682,8 +2234,8 @@ function skipTyping() {
     clearInterval(state.typeTimer);
     state.typeTimer = null;
     state.typing = false;
-    const line = STAGES[state.stage].dialogue[state.dialogueIdx];
-    DOM.dialogueText.textContent = line.text;
+    const langLine = getLangStages()[state.stage].dialogue[state.dialogueIdx];
+    DOM.dialogueText.textContent = langLine.text;
     DOM.btnContinue.classList.add('visible');
   }
 }
@@ -1832,16 +2384,16 @@ function loadStage(idx) {
   // Update HUD
   const pct = (idx / STAGES.length) * 100;
   DOM.progressFill.style.width = pct + '%';
-  DOM.stageCounter.textContent = `Stage ${idx + 1} of ${STAGES.length}`;
-  DOM.roleName.textContent = stageData.role;
+  DOM.stageCounter.textContent = T().stageCounter(idx + 1, STAGES.length);
+  DOM.roleName.textContent = getLangStages()[idx].role;
   updateScoreDisplay();
 
   // Load background (dynamic image system)
   loadBackground(stageData);
 
   // Stage title banner
-  DOM.stageNumLabel.textContent  = `Stage ${stageData.id}`;
-  DOM.stageTitleText.textContent = stageData.title;
+  DOM.stageNumLabel.textContent  = T().stageLabel(stageData.id);
+  DOM.stageTitleText.textContent = getLangStages()[idx].title;
   DOM.titleBanner.classList.add('visible');
   setTimeout(() => DOM.titleBanner.classList.remove('visible'), 2800);
 
@@ -1862,15 +2414,18 @@ function loadStage(idx) {
    SECTION J: DIALOGUE RENDERING
    ============================================================ */
 function renderDialogueLine() {
-  const stage = STAGES[state.stage];
-  const line  = stage.dialogue[state.dialogueIdx];
+  const stage   = STAGES[state.stage];
+  const line    = stage.dialogue[state.dialogueIdx];
+  const langLine = getLangStages()[state.stage].dialogue[state.dialogueIdx];
 
-  DOM.speakerName.textContent = line.speaker;
+  DOM.speakerName.textContent = langLine.speaker;
   DOM.portrait.src = line.portrait || SPRITES.jesus;
   DOM.btnContinue.classList.remove('visible');
+  DOM.dialogueHint.textContent = T().dialogueHint;
+  DOM.btnContinue.textContent  = T().continueBtn;
 
-  highlightSpeaker(line.speaker);
-  typeText(DOM.dialogueText, line.text, 26);
+  highlightSpeaker(line.speaker);   // always use English name for sprite matching
+  typeText(DOM.dialogueText, langLine.text, 26);
 }
 
 function advanceDialogue() {
@@ -1915,15 +2470,15 @@ function showQuestion() {
   state.questionOpen      = true;
   state.answeredCorrectly = false;
 
-  const questions = STAGES[state.stage].questions;
+  const questions = getLangStages()[state.stage].questions;
   const q         = questions[state.questionIdx];
   const qNum      = state.questionIdx + 1;
   const qTotal    = questions.length;
 
   DOM.questionLabel.textContent  = qTotal > 1
-    ? `✦ Question ${qNum} of ${qTotal} ✦`
-    : '✦ Knowledge Check ✦';
-  DOM.questionPtsHint.textContent = `First correct: ${POINTS_TABLE[0]} pts`;
+    ? T().questionLabel(qNum, qTotal)
+    : T().knowledgeCheck;
+  DOM.questionPtsHint.textContent = T().firstCorrect(POINTS_TABLE[0]);
   DOM.questionText.textContent    = q.prompt;
   DOM.feedbackText.textContent    = '';
   DOM.feedbackText.className      = 'feedback-text';
@@ -1945,7 +2500,7 @@ function showQuestion() {
 function handleAnswer(idx, btn) {
   if (state.answeredCorrectly) return;
 
-  const q       = STAGES[state.stage].questions[state.questionIdx];
+  const q       = getLangStages()[state.stage].questions[state.questionIdx];
   const allBtns = DOM.answerGrid.querySelectorAll('.answer-btn');
 
   if (idx === q.correct) {
@@ -1965,9 +2520,9 @@ function handleAnswer(idx, btn) {
 
     setTimeout(() => {
       if (hasMoreQ) {
-        DOM.btnNextStage.textContent = 'Next Question →';
+        DOM.btnNextStage.textContent = T().nextQuestion;
       } else {
-        DOM.btnNextStage.textContent = isLastStage ? 'Complete Journey →' : 'Next Stage →';
+        DOM.btnNextStage.textContent = isLastStage ? T().completeJourney : T().nextStage;
       }
       DOM.btnNextStage.classList.add('visible');
     }, 1400);
@@ -1979,9 +2534,9 @@ function handleAnswer(idx, btn) {
     btn.disabled = true;
 
     const nextPts = getPointsAvailable();
-    DOM.feedbackText.textContent = `Not quite — reflect on the story and try again. Next correct answer: ${nextPts} pts`;
+    DOM.feedbackText.textContent = T().wrongFeedback(nextPts);
     DOM.feedbackText.classList.add('visible', 'wrong-fb');
-    DOM.questionPtsHint.textContent = `Next correct: ${nextPts} pts`;
+    DOM.questionPtsHint.textContent = T().nextCorrect(nextPts);
 
     setTimeout(() => {
       DOM.feedbackText.textContent = '';
@@ -2017,6 +2572,7 @@ function advanceQuestion() {
 function nextStage() {
   state.questionOpen = false;
   DOM.questionOverlay.classList.remove('open');
+  DOM.dialogueBox.classList.remove('open');   // hide immediately so old text never shows through
   DOM.btnNextStage.classList.remove('visible');
 
   if (state.stage >= STAGES.length - 1) {
@@ -2079,10 +2635,10 @@ function showEndScreen() {
 
     const pct = state.score / maxPts;
     let msg;
-    if (pct >= 0.95)     msg = '"Well done, good and faithful servant!" Your knowledge of Jesus\' life is outstanding. Every answer on the first attempt!';
-    else if (pct >= 0.8) msg = 'Excellent work! You have a strong understanding of the key events in Jesus\' life. Keep exploring the Gospels.';
-    else if (pct >= 0.6) msg = 'Good effort! Review the stages where you needed extra attempts. The Gospels have much wisdom to offer on each re-reading.';
-    else                 msg = 'Keep journeying! Every time we read about Jesus\' life, we discover something new. Try again and go deeper into the story.';
+    if (pct >= 0.95)     msg = T().endMsg.great;
+    else if (pct >= 0.8) msg = T().endMsg.good;
+    else if (pct >= 0.6) msg = T().endMsg.ok;
+    else                 msg = T().endMsg.low;
 
     DOM.endMessage.textContent = msg;
     DOM.transitionFade.classList.remove('fade-in');
@@ -2208,6 +2764,105 @@ function toggleMute() {
   btn.title = musicMuted ? 'Unmute music' : 'Mute music';
   // If unmuted and music not yet started, try to start
   if (!musicMuted && !musicStarted && state.gameStarted) startMusic();
+}
+
+/* ============================================================
+   SECTION Q: LANGUAGE TOGGLE
+   applyLanguage() refreshes all static UI text.
+   toggleLanguage() switches between 'en' and 'fr'.
+   ============================================================ */
+function applyLanguage() {
+  const t = T();
+
+  /* HUD */
+  document.getElementById('role-label').textContent      = t.roleLabel;
+  document.getElementById('panel-score-label').textContent = t.scoreLabel;
+  document.getElementById('btn-hud-restart').textContent = t.restartBtn;
+  document.getElementById('lang-btn').textContent        = t.langToggle;
+
+  if (state.gameStarted) {
+    DOM.stageCounter.textContent = t.stageCounter(state.stage + 1, STAGES.length);
+    DOM.roleName.textContent     = getLangStages()[state.stage].role;
+  }
+
+  /* Dialogue area */
+  document.getElementById('dialogue-hint').textContent = t.dialogueHint;
+  const contBtn = document.getElementById('btn-continue');
+  if (contBtn.classList.contains('visible')) contBtn.textContent = t.continueBtn;
+
+  /* Active question panel — re-render if open */
+  if (state.questionOpen && state.gameStarted) {
+    const questions = getLangStages()[state.stage].questions;
+    const q         = questions[state.questionIdx];
+    const qNum      = state.questionIdx + 1;
+    const qTotal    = questions.length;
+
+    DOM.questionLabel.textContent = qTotal > 1
+      ? t.questionLabel(qNum, qTotal)
+      : t.knowledgeCheck;
+    DOM.questionText.textContent  = q.prompt;
+
+    const pts = POINTS_TABLE[Math.min(state.attempts, POINTS_TABLE.length - 1)];
+    DOM.questionPtsHint.textContent = state.answeredCorrectly
+      ? t.firstCorrect(POINTS_TABLE[0])
+      : t.nextCorrect(pts);
+
+    /* Re-render answer buttons with translated options */
+    const existing = DOM.answerGrid.querySelectorAll('.answer-btn');
+    const letters  = ['A', 'B', 'C', 'D'];
+    existing.forEach((btn, i) => {
+      const wasCorrect = btn.classList.contains('correct');
+      const wasWrong   = btn.classList.contains('wrong');
+      btn.innerHTML    = `<span class="letter">${letters[i]}</span>${q.options[i]}`;
+      if (wasCorrect) btn.classList.add('correct');
+      if (wasWrong)   btn.classList.add('wrong');
+    });
+
+    /* Update Next button label if visible */
+    if (DOM.btnNextStage.classList.contains('visible')) {
+      const hasMoreQ    = state.questionIdx < STAGES[state.stage].questions.length - 1;
+      const isLastStage = state.stage >= STAGES.length - 1;
+      DOM.btnNextStage.textContent = hasMoreQ
+        ? t.nextQuestion
+        : (isLastStage ? t.completeJourney : t.nextStage);
+    }
+  }
+
+  /* Active dialogue line — re-render text if dialogue is open */
+  if (!state.questionOpen && state.gameStarted && DOM.dialogueBox.classList.contains('open')) {
+    if (!state.typing) {
+      const langLine = getLangStages()[state.stage].dialogue[state.dialogueIdx];
+      DOM.dialogueText.textContent = langLine.text;
+      DOM.speakerName.textContent  = langLine.speaker;
+      document.getElementById('btn-continue').textContent = t.continueBtn;
+    }
+  }
+
+  /* Title screen */
+  document.getElementById('title-course').textContent = t.titleCourse;
+  document.getElementById('title-sub').textContent    = t.titleSub;
+  document.getElementById('title-desc').textContent   = t.titleDesc;
+  document.getElementById('btn-start-game').textContent = t.beginJourney;
+  document.getElementById('title-lang-btn').textContent =
+    currentLang === 'en' ? '🌐 Français' : '🌐 English';
+
+  /* End screen */
+  document.getElementById('end-title').textContent       = t.endTitle;
+  document.getElementById('end-subtitle').textContent    = t.endSubtitle;
+  document.getElementById('end-score-label').textContent = t.endScoreLabel;
+  document.getElementById('btn-restart').textContent     = t.beginAgain;
+
+  /* Stage title banner (if visible right now) */
+  if (state.gameStarted) {
+    const stageData = STAGES[state.stage];
+    document.getElementById('stage-number-label').textContent = t.stageLabel(stageData.id);
+    document.getElementById('stage-title-text').textContent   = getLangStages()[state.stage].title;
+  }
+}
+
+function toggleLanguage() {
+  currentLang = currentLang === 'en' ? 'fr' : 'en';
+  applyLanguage();
 }
 
 /* ============================================================
