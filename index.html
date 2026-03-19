@@ -437,6 +437,42 @@ body {
   border-color: rgba(232,201,106,0.6);
 }
 
+/* Read-aloud (TTS) button */
+#tts-btn {
+  width: 26px; height: 26px;
+  background: rgba(12, 6, 1, 0.6);
+  border: 1px solid rgba(232,201,106,0.25);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--gold);
+  padding: 0;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+#tts-btn:hover {
+  background: rgba(232,201,106,0.12);
+  border-color: rgba(232,201,106,0.6);
+}
+#tts-btn.tts-off {
+  color: rgba(232,201,106,0.35);
+  border-color: rgba(232,201,106,0.12);
+}
+#tts-btn.speaking {
+  color: var(--gold-glow);
+  border-color: var(--gold);
+  box-shadow: 0 0 8px rgba(232,201,106,0.45);
+  animation: ttsPulse 1.2s ease-in-out infinite;
+}
+@keyframes ttsPulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(232,201,106,0.4); }
+  50%       { box-shadow: 0 0 14px rgba(232,201,106,0.75); }
+}
+
 /* ============================================================
    SECTION 6: STAGE TITLE BANNER (inside scene-area)
    ============================================================ */
@@ -1065,6 +1101,7 @@ body {
       </div>
       <button id="btn-hud-restart" onclick="restartGame()">↺ Restart</button>
       <button id="lang-btn" onclick="toggleLanguage()" title="Switch language / Changer de langue">FR</button>
+      <button id="tts-btn" onclick="toggleTTS()" title="Read aloud / Lire à voix haute">🔊</button>
       <button id="audio-btn" onclick="toggleMute()" title="Toggle music">♪</button>
     </div>
 
@@ -2212,6 +2249,7 @@ scaleGame();
    ============================================================ */
 function typeText(element, text, speed = 26, onDone = null) {
   if (state.typeTimer) clearInterval(state.typeTimer);
+  ttsStop();                         // cancel any prior speech immediately
   state.typing = true;
   DOM.btnContinue.classList.remove('visible');
   element.textContent = '';
@@ -2224,6 +2262,7 @@ function typeText(element, text, speed = 26, onDone = null) {
       state.typeTimer = null;
       state.typing = false;
       DOM.btnContinue.classList.add('visible');
+      ttsSpeak(text);               // read the line aloud once fully typed
       if (onDone) onDone();
     }
   }, speed);
@@ -2237,6 +2276,7 @@ function skipTyping() {
     const langLine = getLangStages()[state.stage].dialogue[state.dialogueIdx];
     DOM.dialogueText.textContent = langLine.text;
     DOM.btnContinue.classList.add('visible');
+    ttsSpeak(langLine.text);        // read the skipped line aloud
   }
 }
 
@@ -2431,6 +2471,7 @@ function renderDialogueLine() {
 function advanceDialogue() {
   if (state.typing)        { skipTyping(); return; }
   if (state.questionOpen)  { return; }
+  ttsStop();                         // silence any ongoing speech
 
   const stage = STAGES[state.stage];
   state.dialogueIdx++;
@@ -2495,6 +2536,8 @@ function showQuestion() {
   });
 
   DOM.questionOverlay.classList.add('open');
+  // Brief pause so the overlay transition completes, then read aloud
+  setTimeout(ttsReadQuestion, 350);
 }
 
 function handleAnswer(idx, btn) {
@@ -2547,6 +2590,7 @@ function handleAnswer(idx, btn) {
 
 /* Called by the "Next Question / Next Stage" button */
 function advanceQuestion() {
+  ttsStop();                         // silence any ongoing speech
   const questions   = STAGES[state.stage].questions;
   const hasMoreQ    = state.questionIdx < questions.length - 1;
 
@@ -2647,6 +2691,7 @@ function showEndScreen() {
 
 function restartGame() {
   if (state.typeTimer) clearInterval(state.typeTimer);
+  ttsStop();
 
   state = {
     stage: 0, dialogueIdx: 0, questionIdx: 0, attempts: 0,
@@ -2764,6 +2809,97 @@ function toggleMute() {
   btn.title = musicMuted ? 'Unmute music' : 'Mute music';
   // If unmuted and music not yet started, try to start
   if (!musicMuted && !musicStarted && state.gameStarted) startMusic();
+}
+
+/* ============================================================
+   SECTION R: READ-ALOUD / TEXT-TO-SPEECH ENGINE
+   Uses the browser's built-in Web Speech API (SpeechSynthesis).
+   • Auto-reads each dialogue line once typing completes.
+   • Auto-reads questions + all lettered options when a question opens.
+   • Reading stops immediately when the player advances.
+   • Voice is chosen to match the current language (en / fr).
+   • Falls back gracefully if the browser has no TTS support.
+   ============================================================ */
+let ttsEnabled  = false;
+let ttsSpeaking = false;
+const ttsBtn    = document.getElementById('tts-btn');
+const synth     = window.speechSynthesis || null;
+
+/* Pick the best available voice for the given lang code */
+function pickVoice(langCode) {
+  if (!synth) return null;
+  const voices = synth.getVoices();
+  // Prefer an exact match on lang prefix (e.g. "en", "fr")
+  return (
+    voices.find(v => v.lang.toLowerCase().startsWith(langCode) && v.localService) ||
+    voices.find(v => v.lang.toLowerCase().startsWith(langCode)) ||
+    voices.find(v => v.default) ||
+    voices[0] ||
+    null
+  );
+}
+
+/* Speak a string. Cancels any in-progress utterance first. */
+function ttsSpeak(text) {
+  if (!synth || !ttsEnabled) return;
+  synth.cancel();
+
+  // Strip curly quotes / ornament characters for cleaner speech
+  const clean = text.replace(/[«»✦↺→♪]/g, '').trim();
+  if (!clean) return;
+
+  const utt  = new SpeechSynthesisUtterance(clean);
+  utt.lang   = currentLang === 'fr' ? 'fr-FR' : 'en-US';
+  utt.rate   = 0.92;
+  utt.pitch  = 1.0;
+  const voice = pickVoice(currentLang === 'fr' ? 'fr' : 'en');
+  if (voice) utt.voice = voice;
+
+  utt.onstart = () => {
+    ttsSpeaking = true;
+    ttsBtn.classList.add('speaking');
+  };
+  utt.onend = utt.onerror = () => {
+    ttsSpeaking = false;
+    if (ttsEnabled) ttsBtn.classList.remove('speaking');
+  };
+
+  synth.speak(utt);
+}
+
+/* Build the full read-aloud script for a question panel */
+function ttsReadQuestion() {
+  if (!ttsEnabled) return;
+  const q       = getLangStages()[state.stage].questions[state.questionIdx];
+  const letters = ['A', 'B', 'C', 'D'];
+  const parts   = [q.prompt, ...q.options.map((opt, i) => `${letters[i]}. ${opt}`)];
+  ttsSpeak(parts.join('  …  '));
+}
+
+/* Stop all TTS immediately */
+function ttsStop() {
+  if (synth) synth.cancel();
+  ttsSpeaking = false;
+  ttsBtn.classList.remove('speaking');
+}
+
+/* Toggle TTS on/off */
+function toggleTTS() {
+  ttsEnabled = !ttsEnabled;
+  if (!ttsEnabled) {
+    ttsStop();
+    ttsBtn.classList.add('tts-off');
+    ttsBtn.title = 'Read aloud (off) / Lecture désactivée';
+  } else {
+    ttsBtn.classList.remove('tts-off');
+    ttsBtn.title = 'Read aloud (on) / Lecture activée';
+  }
+}
+
+/* Voices load asynchronously in some browsers — pre-load them */
+if (synth) {
+  synth.getVoices(); // trigger load
+  synth.addEventListener('voiceschanged', () => synth.getVoices());
 }
 
 /* ============================================================
